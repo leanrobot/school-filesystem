@@ -1,0 +1,3 @@
+STRUCTURE:
+	16 Inodes per block.
+	CONSTANT INDEX BLOCK END = -21321837 denotes the end of a indirect block
