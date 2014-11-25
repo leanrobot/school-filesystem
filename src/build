@@ -1,1 +1,1 @@
-javac -cp .:../ThreadOS_classes *.java
+javac -cp .:../ThreadOS_FP *.java

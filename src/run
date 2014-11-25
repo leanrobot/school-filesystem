@@ -1,1 +1,1 @@
-java -cp .:../ThreadOS_classes Boot
+java -cp .:../ThreadOS_FP Boot
