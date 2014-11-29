@@ -150,4 +150,12 @@ public class SysLib {
     public static int fsize(int fd) {
         return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SIZE, fd, null);
     }
+
+    public static boolean isOk(int status) {
+        return status == Kernel.OK;
+    }
+
+    public static boolean isError(int status) {
+        return status == Kernel.ERROR;
+    }
 }
