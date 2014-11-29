@@ -90,14 +90,15 @@ public class FileSystem {
 		return Kernel.ERROR;
 	}
 	
-	public int format(int maxInodes){
+	public boolean format(int maxInodes) {
 		//formats the disk, (i.e., Disk.java's data contents). The parameter files specifies 
 		//the maximum number of files to be created, (i.e., the number of inodes to be 
 		//allocated) in your file system. The return value is 0 on success, otherwise -1.
-		superBlock.format(maxInodes);
+		int status = superBlock.format(maxInodes);
+		return SysLib.isOk(status);
 	}
 	
-	public int delete(String fileName){
+	public int delete(String fileName) {
 		//destroys the file specified by fileName. If the file is currently open, it is not 
 		//destroyed until the last open on it is closed, but new attempts to open it will fail.
 		return Kernel.ERROR;

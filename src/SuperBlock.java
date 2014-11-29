@@ -27,40 +27,43 @@ public class SuperBlock {
 	}
 
 
-		void format(int numInodes) {
-			totalBlocks = DEFAULT_TOTAL_BLOCKS;
-			totalInodes = numInodes;
+	int format(int numInodes) {
+		int status = 0;
 
-			for (short i= 1; i <= numInodes; ++i) {
-				Inode temp = new Inode();
-				temp.toDisk(i);
-			}
+		totalBlocks = DEFAULT_TOTAL_BLOCKS;
+		totalInodes = numInodes;
 
-			sync();
-
+		for (short i= 1; i <= numInodes; ++i) {
+			Inode temp = new Inode();
+			status -= temp.toDisk(i);
 		}
 
-		int sync(){
-			// create array of data to be written
-			byte[] superBlockData = new byte[Disk.blockSize];
+		status -= sync();
 
-			// write the data to the array
-			SysLib.int2bytes(totalBlocks, superBlockData, 0);
-			SysLib.int2bytes(totalInodes, superBlockData, 4);
-			SysLib.int2bytes(freeList, superBlockData, 8);
+		return (status != 0) ? -1 : status;
+	}
 
-			// write the array to block 0 of the disk
-			int retval = SysLib.rawwrite(0, superBlockData);
-			
-			// check for succes and print messages accordingly
-			if (SysLib.isOk(retval)) {
-				SysLib.cout("Superblock synchronized");
-			} else {
-				SysLib.cout("Failure when synchronizing superblock");
-			}
-			
-			return retval;
+	int sync(){
+		// create array of data to be written
+		byte[] superBlockData = new byte[Disk.blockSize];
+
+		// write the data to the array
+		SysLib.int2bytes(totalBlocks, superBlockData, 0);
+		SysLib.int2bytes(totalInodes, superBlockData, 4);
+		SysLib.int2bytes(freeList, superBlockData, 8);
+
+		// write the array to block 0 of the disk
+		int retval = SysLib.rawwrite(0, superBlockData);
+		
+		// check for succes and print messages accordingly
+		if (SysLib.isOk(retval)) {
+			SysLib.cout("Superblock synchronized");
+		} else {
+			SysLib.cout("Failure when synchronizing superblock");
 		}
+		
+		return retval;
+	}
 		
 		
 	
