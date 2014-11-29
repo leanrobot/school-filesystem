@@ -1,15 +1,29 @@
    public class FileTable {
 
+      private FileSystem fs;        // pointer to the filesystem singleton.
       private Vector table;         // the actual entity of this file table
       private Directory dir;        // the root directory
 
-      public FileTable( Directory directory ) { // constructor
+      public FileTable(FileSystem fs, Directory directory ) { // constructor
          table = new Vector( );     // instantiate a file (structure) table
          dir = directory;           // receive a reference to the Director
+         this.fs = fs;
       }                             // from the file system
 
       // major public methods
       public synchronized FileTableEntry falloc( String filename, String mode ) {
+         int iNumber = dir.namei(filename);
+         if(SysLib.isError(iNumber)) {
+            iNumber = dir.ialloc(filename);
+         }
+         Inode node = fs.getInode(iNumber);
+         fte = new FileTableEntry(iNumber, node, mode);
+         synchronized(node) {
+            node.count++;
+         }
+         table.add(fte);
+         return fte;
+         
          // allocate a new file (structure) table entry for this file name
          // allocate/retrieve and register the corresponding inode using dir
          // increment this inode's count
@@ -18,6 +32,12 @@
       }
 
       public synchronized boolean ffree( FileTableEntry e ) {
+         synchronized(e.inode) {
+            e.inode.count--;
+            e.inode.toDisk(iNumber);
+         }
+         return table.remove(e);
+
          // receive a file table entry reference
          // save the corresponding inode to the disk
          // free this file table entry.
@@ -25,6 +45,9 @@
       }
 
       public synchronized boolean fempty( ) {
+         for(FileTableEntry fte : table) {
+            ffree(fte);
+         }
          return table.isEmpty( );  // return if table is empty
-      }                            // should be called before starting a format
+      }
    }
