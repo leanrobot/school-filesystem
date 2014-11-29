@@ -1,12 +1,12 @@
 public class FileSystem {
 	private SuperBlock superBlock;
-	private Directory Directory;
+	private Directory directory;
 	private FileStructureTable fileTable;
 	
 	private Vector<Inode> inodes;
 
 	public FileSystem( int diskBlocks) {
-		superblock = new SuperBlock(diskBlocks);
+		superBlock = new SuperBlock(diskBlocks);
 		directory = new Directory(superBlock.totalInodes);
 		fileTable = new FileStructureTable(directory);
 
@@ -21,7 +21,7 @@ public class FileSystem {
 	}
 	
 	public void sync(){
-			
+		superBlock.sync();
 	}
 	
 	public int read(FileTableEntry ftEnt, byte[] buffer){
@@ -35,6 +35,7 @@ public class FileSystem {
 	}
 	
 	public int write(FileTableEntry ftEnt, byte[] buffer){
+
 		//writes the contents of buffer to the file indicated by fd, starting at the 
 		//position indicated by the seek pointer. The operation may overwrite existing data 
 		//in the file and/or append to the end of the file. SysLib.write increments the seek 
