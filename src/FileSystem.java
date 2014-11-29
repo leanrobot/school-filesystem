@@ -1,23 +1,26 @@
+
 public class FileSystem {
 	private SuperBlock superBlock;
-	private Directory directory;
-	private FileStructureTable fileTable;
+	// private Directory directory;
+	// private FileStructureTable fileTable;
 	
-	private Vector<Inode> inodes;
+	private Inode[] inodeCache;
 
 	public FileSystem( int diskBlocks) {
 		superBlock = new SuperBlock(diskBlocks);
-		directory = new Directory(superBlock.totalInodes);
-		fileTable = new FileStructureTable(directory);
+		inodeCache = new Inode[superBlock.totalInodes];
 
-		FileTableEntry dirEnt = open("/", "r");
-		int dirSize = fsize(dirEnt);
-		if(dirSize > 0) {
-			byte[] dirData = new byte[dirSize];
-			read(dirEnt, dirData);
-			directory.bytes2directory(dirdata);
-		}
-		close (dirEnt);
+		// directory = new Directory(superBlock.totalInodes);
+		// fileTable = new FileStructureTable(directory);
+
+		// FileTableEntry dirEnt = open("/", "r");
+		// int dirSize = fsize(dirEnt);
+		// if(dirSize > 0) {
+		// 	byte[] dirData = new byte[dirSize];
+		// 	read(dirEnt, dirData);
+		// 	directory.bytes2directory(dirdata);
+		// }
+		// close (dirEnt);
 	}
 	
 	public void sync(){
@@ -32,6 +35,7 @@ public class FileSystem {
 		//the beginning of buffer. It increments the seek pointer by the number of bytes to 
 		//have been read. The return value is the number of bytes that have been read, or a 
 		//negative value upon an error.
+		return Kernel.ERROR;
 	}
 	
 	public int write(FileTableEntry ftEnt, byte[] buffer){
@@ -41,7 +45,7 @@ public class FileSystem {
 		//in the file and/or append to the end of the file. SysLib.write increments the seek 
 		//pointer by the number of bytes to have been written. The return value is the number 
 		//of bytes that have been written, or a negative value upon an error.
-		
+		return Kernel.ERROR;
 	}
 	
 	public int open(String fileName, String mode){
@@ -55,16 +59,19 @@ public class FileSystem {
 		//the calling thread's user file descriptor table is full, SysLib.open should return an 
 		//error value. The seek pointer is initialized to zero in the mode "r", "w", and "w+", 
 		//whereas initialized at the end of the file in the mode "a".
+		return Kernel.ERROR;
 	}
 	
 	public int close(FileTableEntry ftEnt){
 		//closes the file corresponding to fd, commits all file transactions on this file, and 
 		//unregisters fd from the user file descriptor table of the calling thread's TCB. The 
 		//return value is 0 in success, otherwise -1.
+		return Kernel.ERROR;
 	}
 	
 	public int fsize(FileTableEntry ftEnt){
 		//returns the size in bytes of the file indicated by fd.
+		return Kernel.ERROR;
 	}
 	
 	public int seek(FileTableEntry ftEnt, int offset, int whence){
@@ -80,17 +87,20 @@ public class FileSystem {
 		//it to zero. If the user attempts to set the pointer to beyond the file size, you 
 		//must set the seek pointer to the end of the file. In both cases, you should return 
 		//success.
+		return Kernel.ERROR;
 	}
 	
 	public int format(int maxInodes){
 		//formats the disk, (i.e., Disk.java's data contents). The parameter files specifies 
 		//the maximum number of files to be created, (i.e., the number of inodes to be 
 		//allocated) in your file system. The return value is 0 on success, otherwise -1.
+		return Kernel.ERROR;
 	}
 	
 	public int delete(String fileName){
 		//destroys the file specified by fileName. If the file is currently open, it is not 
 		//destroyed until the last open on it is closed, but new attempts to open it will fail.
+		return Kernel.ERROR;
 	}
 
 	/*
@@ -102,15 +112,15 @@ public class FileSystem {
 		after retrieval, return the Inode to the caller.
 	*/
 
-	/*
-	def readRawData(int[] data, blockId, blockOffset):
-	def writeRawData(int[] data, blockId, blockOffset):
-		abstraction to allow only specific pieces of a block to be written,
-		instead of the entire block at once.
+	public Inode getInode(short iNumber) {
+		// If Inode not in cache, load it in.
+		if(inodeCache[iNumber] == null) {
+			Inode inode = new Inode(iNumber);
+			inodeCache[iNumber] = inode;
+		}
 
-		This will be used by the Inode and all other physical writes to the disk
-		by the filesystem.
-	*/
+		return inodeCache[iNumber];
+	}
 
 
 }

@@ -55,15 +55,15 @@ public class Inode {
 
     }
 
-    public int getInodeBlock(int iNumber) {
+    public int getInodeBlock(short iNumber) {
         return ((iNumber * iNodeSize) / 512) + 1;
     }
 
-    public int getINodeOffset(int iNumber) {
+    public int getINodeOffset(short iNumber) {
         return (iNumber * iNodeSize) % 512;
     }
 
-    public int toDisk( int iNumber ) {                  // save to disk as the i-th inode
+    public synchronized int toDisk( short iNumber ) {                  // save to disk as the i-th inode
         int blockId = getInodeBlock(iNumber);
         int blockOffset = getINodeOffset(iNumber);
     	System.out.println("writing inode "+iNumber+" to disk at: "+blockId+" "+blockOffset+"\n");

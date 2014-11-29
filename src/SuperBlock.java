@@ -31,7 +31,7 @@ public class SuperBlock {
 			totalBlocks = DEFAULT_TOTAL_BLOCKS;
 			totalInodes = numInodes;
 
-			for (int i= 1; i <= numInodes; ++i) {
+			for (short i= 1; i <= numInodes; ++i) {
 				Inode temp = new Inode();
 				temp.toDisk(i);
 			}
