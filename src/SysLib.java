@@ -135,7 +135,7 @@ public class SysLib {
     }
 
     public static int seek(int fd, int offset, int whence) {
-        String[] seekArgs = stringToArgs(offset + " " + whence);
+        int [] seekArgs = {offset, whence};
         return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SEEK, fd, seekArgs);
     }
 
