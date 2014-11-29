@@ -15,7 +15,7 @@ public class Directory {
          root.getChars( 0, fsize[0], fnames[0], 0 ); // fnames[0] includes "/"
       }
 
-      public int bytes2directory( byte data[] ) {
+      public void bytes2directory( byte[] data ) {
          // assumes data[] received directory information from disk
          // initializes the Directory instance with this data[]
 
@@ -31,10 +31,6 @@ public class Directory {
             temp.getChars(0, fsize[i], fnames[i], 0);
             offset += maxChars * 2;
          }
-
-         return 0;
-
-         
       }
 
       public byte[] directory2bytes( ) {
