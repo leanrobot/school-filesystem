@@ -19,6 +19,8 @@ public class Inode {
 
       Inode( short iNumber ) {                       // retrieving inode from disk
          // design it by yourself.
+         // makes a call to the filesystem to load the specific bytes for an
+         // Inode.
       }
 
       int toDisk( short iNumber ) {                  // save to disk as the i-th inode

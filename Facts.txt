@@ -2,4 +2,44 @@ STRUCTURE:
 	16 Inodes per block.
 	CONSTANT INDEX BLOCK END = -21321837 denotes the end of a indirect block
 
+  512 bytes per block.
+  512 / 16 = 32 bytes per inode.
+  16 shorts per inode.
+  11 direct + 1 indirect + 2 (1 int) length + 2 flag = 16 shorts.
+
 Working ThreadOS is provided at ~sdame/CLASS_SHARE/FP
+
+FileSystem: =================================================================
+
+Maintain a list of free nodes in the system. When an indirect pointer is needed
+  for an Inode, then the file system is queried and a free block is returned.
+
+Indirect data for Inodes:
+  The block represents an index array that tells all the other blocks of the disk 
+  that belong to that Inode. These blocks are still requested via a standard 
+  filesystem api which allocated blocks out and keeps track of whether they
+  are in use or free.
+
+  Upon the deletion of an inode, it returns it's blocks back to the filesystem, so
+  that it can update it's list.
+
+
+  Helper method for Inode:
+    the filesystem will provide an interface that is used by the inode. When called with an
+    Inode number, the filesystem will return the blockId and the offsets inside that block that
+    the Inode will occupy on the physical disk.
+
+    The Inode itself will handle it's own write to the disk.
+
+The FileSystem will own a vector of all the Inode's currently on the disk. A public method
+  will be provided in order to retrieve a specific Inode. This will be useful because when an inode
+  is being written to or read from, we can create a monitor lock upon that inode object. Therefore
+  other threads who want to write or read will have to wait until the update is completed. This
+  solves the problem of having to constantly write the actual inode back and forth to the disk.
+  
+  When an actual close() happens for an file descriptor upon an inode, this will write a physical
+  disk write.
+
+
+
+
