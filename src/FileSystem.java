@@ -26,13 +26,25 @@ public class FileSystem {
 	}
 
 	public int loadInodeCache(Inode[] cache) {
-		for(int i=1; i<cache.length; i++) {
+		for(short i=1; i<cache.length; i++) {
 			cache[i] = new Inode(i);
 		}
+		return Kernel.OK;
 	}
 	
 	public void sync(){
+		SysLib.cout("Syncing Filesystem to disk\n");
 		superBlock.sync();
+		SysLib.cout("\tSync Superblock done.\n");
+		SysLib.cout("\tSync inodes: ");
+		for(short i=1; i<inodeCache.length; i++) {
+			Inode n = inodeCache[i];
+			synchronized(n) {
+				n.toDisk(i);
+				SysLib.cout(".");
+			}
+		}
+		SysLib.cout("\nFileSystem Synced!\n");
 	}
 	
 	public int read(FileTableEntry ftEnt, byte[] buffer){
@@ -57,7 +69,7 @@ public class FileSystem {
 	}
 	
 	public int open(String fileName, String mode){
-		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
+		//FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
 
 
@@ -140,9 +152,6 @@ public class FileSystem {
 		}
 
 		return inodeCache[iNumber];
-	}
-
-	public int getNumFreeInodes() {
 	}
 
 	public Inode acquireFreeInode() {

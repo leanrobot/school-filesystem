@@ -31,7 +31,6 @@ public class SuperBlock {
 		totalInodes = numInodes;
 		// finds the last block an inode is allocated in, and adds 1.
 		freeList = Inode.getInodeBlock((short)numInodes) +1;
-		System.out.println(freeList);
 
 		for (short i= 1; i <= numInodes; ++i) {
 			Inode temp = new Inode();
@@ -57,9 +56,9 @@ public class SuperBlock {
 		
 		// check for succes and print messages accordingly
 		if (SysLib.isOk(retval)) {
-			SysLib.cout("Superblock synchronized");
+			SysLib.cout("Superblock synchronized\n");
 		} else {
-			SysLib.cout("Failure when synchronizing superblock");
+			SysLib.cout("Failure when synchronizing superblock\n");
 		}
 		
 		return retval;

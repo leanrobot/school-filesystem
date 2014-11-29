@@ -66,7 +66,7 @@ public class Inode {
     public synchronized int toDisk( short iNumber ) {                  // save to disk as the i-th inode
         int blockId = getInodeBlock(iNumber);
         int blockOffset = getINodeOffset(iNumber);
-    	System.out.println("writing inode "+iNumber+" to disk at: "+blockId+" "+blockOffset+"\n");
+    	//System.out.println("writing inode "+iNumber+" to disk at: "+blockId+" "+blockOffset+"\n");
 
 
         int offset = 0; // used to keep track when writing to iNodeData;
