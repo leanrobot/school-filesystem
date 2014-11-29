@@ -49,6 +49,17 @@ public class FileSystem {
 	}
 	
 	public int open(String fileName, String mode){
+		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
+
+
+
+
+
+		//if bad - return null;
+
+		//if good - return newFileTableEntry;
+
+
 		//opens the file specified by the fileName string in the given mode (where 
 		//"r" = ready only, "w" = write only, "w+" = read/write, "a" = append), and allocates 
 		//a new file descriptor, fd to this file. The file is created if it does not exist in 
