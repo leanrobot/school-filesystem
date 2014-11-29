@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class SysLib {
+
     public static int exec( String args[] ) {
         return Kernel.interrupt( Kernel.INTERRUPT_SOFTWARE,
 				 Kernel.EXEC, 0, args );
@@ -114,5 +115,39 @@ public class SysLib {
 	int n = ((b[offset] & 0xff) << 24) + ((b[offset+1] & 0xff) << 16) +
 	        ((b[offset+2] & 0xff) << 8) + (b[offset+3] & 0xff);
 	return n;
+    }
+
+    public static int format(int maxINodes) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.FORMAT, maxINodes, null);
+    }
+
+    public static int open(String fileName, String mode) {
+        String[] nameAndMode = stringToArgs(fileName + " " + mode);
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.OPEN, 0, nameAndMode); 
+    }
+
+    public static int read(int fd, byte buffer[]) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.READ, fd, buffer);
+    }
+
+    public static int write(int fd, byte buffer[]) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.WRITE, fd, buffer);   
+    }
+
+    public static int seek(int fd, int offset, int whence) {
+        String[] seekArgs = stringToArgs(offset + " " + whence);
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SEEK, fd, seekArgs);
+    }
+
+    public static int close(int fd) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.CLOSE, fd, null);
+    }
+
+    public static int delete(String fileName) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.DELETE, 0, fileName);
+    }
+
+    public static int fsize(int fd) {
+        return Kernel.interrupt(Kernel.INTERRUPT_SOFTWARE, Kernel.SIZE, fd, null);
     }
 }
