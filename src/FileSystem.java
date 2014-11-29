@@ -4,11 +4,13 @@ public class FileSystem {
 	// private Directory directory;
 	// private FileStructureTable fileTable;
 	
+	// index 0 is not used, since this is the superblock;
 	private Inode[] inodeCache;
 
 	public FileSystem( int diskBlocks) {
 		superBlock = new SuperBlock(diskBlocks);
-		inodeCache = new Inode[superBlock.totalInodes];
+		inodeCache = new Inode[superBlock.totalInodes +1];
+		loadInodeCache(inodeCache);
 
 		// directory = new Directory(superBlock.totalInodes);
 		// fileTable = new FileStructureTable(directory);
@@ -21,6 +23,12 @@ public class FileSystem {
 		// 	directory.bytes2directory(dirdata);
 		// }
 		// close (dirEnt);
+	}
+
+	public int loadInodeCache(Inode[] cache) {
+		for(int i=1; i<cache.length; i++) {
+			cache[i] = new Inode(i);
+		}
 	}
 	
 	public void sync(){
@@ -132,6 +140,21 @@ public class FileSystem {
 		}
 
 		return inodeCache[iNumber];
+	}
+
+	public int getNumFreeInodes() {
+	}
+
+	public Inode acquireFreeInode() {
+		for(Inode n : inodeCache) {
+			if(n.flag == 0) {
+				synchronized(n) {
+					n.flag = 1;
+				}
+				return n;
+			}
+		}
+		return null;
 	}
 
 
