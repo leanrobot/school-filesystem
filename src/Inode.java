@@ -42,20 +42,20 @@ public class Inode {
         SysLib.int2bytes(this.length, iNodeData, offset);
         offset+=4;
         // write the count(short)
-        SysLib.int2bytes(this.count, iNodeData, offset);
+        SysLib.short2bytes(this.count, iNodeData, offset);
         offset+=2;
         //write the flag(short)
-        SysLib.int2bytes(this.flag, iNodeData, offset);
+        SysLib.short2bytes(this.flag, iNodeData, offset);
         offset+=2;
 
         // write the direct shorts
         for(int directIndex = 0; directIndex < this.direct.length; directIndex++) {
-            SysLib.int2bytes(this.direct[directIndex], iNodeData, offset);
+            SysLib.short2bytes(this.direct[directIndex], iNodeData, offset);
             offset+=2;
         }
 
         // write the indirect(short)
-        SysLib.int2bytes(this.indirect, iNodeData, offset);
+        SysLib.short2bytes(this.indirect, iNodeData, offset);
 
         //write the iNode;
         try{
