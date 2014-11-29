@@ -1,4 +1,4 @@
-public class FileSystemException extends Exception {
+public class FileSystemException extends RuntimeException {
 	public FileSystemException(String message, Throwable cause) {
 		super(message, cause);
 	}
