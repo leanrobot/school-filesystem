@@ -56,7 +56,7 @@ public class Inode {
     }
 
     public int getInodeBlock(int iNumber) {
-        return (iNumber * iNodeSize) / 512;
+        return ((iNumber * iNodeSize) / 512) + 1;
     }
 
     public int getINodeOffset(int iNumber) {
