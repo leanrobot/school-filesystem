@@ -55,11 +55,11 @@ public class Inode {
 
     }
 
-    public int getInodeBlock(short iNumber) {
+    public static int getInodeBlock(short iNumber) {
         return ((iNumber * iNodeSize) / 512) + 1;
     }
 
-    public int getINodeOffset(short iNumber) {
+    public static int getINodeOffset(short iNumber) {
         return (iNumber * iNodeSize) % 512;
     }
 
