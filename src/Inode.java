@@ -63,7 +63,7 @@ public class Inode {
         return (iNumber * iNodeSize) % 512;
     }
 
-    int toDisk( short iNumber ) {                  // save to disk as the i-th inode
+    public int toDisk( short iNumber ) {                  // save to disk as the i-th inode
         int blockId = getInodeBlock(iNumber);
         int blockOffset = getINodeOffset(iNumber);
 
