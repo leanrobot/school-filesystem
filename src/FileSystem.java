@@ -71,10 +71,6 @@ public class FileSystem {
 	public int open(String fileName, String mode){
 		//FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
-
-
-
-
 		//if bad - return null;
 
 		//if good - return newFileTableEntry;
@@ -144,6 +140,10 @@ public class FileSystem {
 		after retrieval, return the Inode to the caller.
 	*/
 
+	public int acquireFreeBlock() {
+		return superBlock.freeList++;
+	}
+
 	public Inode getInode(short iNumber) {
 		// If Inode not in cache, load it in.
 		if(inodeCache[iNumber] == null) {
@@ -154,17 +154,26 @@ public class FileSystem {
 		return inodeCache[iNumber];
 	}
 
-	public Inode acquireFreeInode() {
-		for(Inode n : inodeCache) {
+	public int getFreeNodeNumber() {
+		for(int i=1; i<inodeCache.length; i++) {
+			Inode n = inodeCache[i];
 			if(n.flag == 0) {
-				synchronized(n) {
-					n.flag = 1;
-				}
-				return n;
+				return i;
 			}
+		}
+		return Kernel.ERROR;
+	}
+
+	public Inode acquireFreeInode() {
+		int freeINumber = getFreeNodeNumber();
+		if(SysLib.isError(freeINumber)) {
+			Inode n = inodeCache[freeINumber];
+			synchronized(n) {
+				n.flag = 1
+			}
+			return n;
 		}
 		return null;
 	}
-
 
 }
