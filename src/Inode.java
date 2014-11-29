@@ -103,7 +103,7 @@ public class Inode {
 
     public int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
         if(blockId < 0  ||
-            blockOffset+data.length >= Disk.blockSize || blockOffset < 0) {
+            blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
 
             throw new FileSystemException("invalid blockId, or offset for write");
         }
@@ -131,7 +131,7 @@ public class Inode {
       // check the following
       //    blockId is valid, offset + data.length < blockLength
       if(blockId < 0  ||
-         blockOffset+data.length >= Disk.blockSize || blockOffset < 0) {
+         blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
          
          throw new FileSystemException("invalid blockId, or offset for write");
       }
