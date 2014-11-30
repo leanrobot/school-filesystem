@@ -13,7 +13,7 @@ public class FileSystem {
 		loadInodeCache(inodeCache);
 
 		directory = new Directory(superBlock.totalInodes);
-		fileTable = new FileTable(directory);
+		fileTable = new FileTable(this, directory);
 
 		// FileTableEntry dirEnt = open("/", "r");
 		// int dirSize = fsize(dirEnt);

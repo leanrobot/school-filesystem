@@ -1,23 +1,25 @@
-   public class FileTable {
+import java.util.Vector;
+
+public class FileTable {
 
       private FileSystem fs;        // pointer to the filesystem singleton.
-      private Vector table;         // the actual entity of this file table
+      private Vector<FileTableEntry> table;         // the actual entity of this file table
       private Directory dir;        // the root directory
 
       public FileTable(FileSystem fs, Directory directory ) { // constructor
-         table = new Vector( );     // instantiate a file (structure) table
+         table = new Vector<FileTableEntry>();     // instantiate a file (structure) table
          dir = directory;           // receive a reference to the Director
          this.fs = fs;
       }                             // from the file system
 
       // major public methods
       public synchronized FileTableEntry falloc( String filename, String mode ) {
-         int iNumber = dir.namei(filename);
+         short iNumber = dir.namei(filename);
          if(SysLib.isError(iNumber)) {
             iNumber = dir.ialloc(filename);
          }
          Inode node = fs.getInode(iNumber);
-         fte = new FileTableEntry(iNumber, node, mode);
+         FileTableEntry fte = new FileTableEntry(node, iNumber, mode);
          synchronized(node) {
             node.count++;
          }
@@ -34,7 +36,7 @@
       public synchronized boolean ffree( FileTableEntry e ) {
          synchronized(e.inode) {
             e.inode.count--;
-            e.inode.toDisk(iNumber);
+            e.inode.toDisk(e.iNumber);
          }
          return table.remove(e);
 
