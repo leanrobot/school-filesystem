@@ -196,7 +196,12 @@ public class Kernel
                case OPEN:    // to be implemented in project
                   if ( ( myTcb = scheduler.getMyTcb( ) ) != null ) {
                      String[] s = ( String[] )args;
-                     return myTcb.getFd( fs.open( s[0], s[1] ) );
+                     FileTableEntry fte = fs.open( s[0], s[1] );
+                     int check = myTcb.getFd(fte);
+                     if (SysLib.isError(check)){
+                    	 fs.close(fte);
+                     }
+                     return check;
                   } else
                      return ERROR;
                case CLOSE:   // to be implemented in project

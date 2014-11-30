@@ -1,8 +1,8 @@
 
 public class FileSystem {
 	private SuperBlock superBlock;
-	// private Directory directory;
-	// private FileStructureTable fileTable;
+	private Directory directory;
+	private FileTable fileTable;
 	
 	// index 0 is not used, since this is the superblock;
 	private Inode[] inodeCache;
@@ -12,8 +12,8 @@ public class FileSystem {
 		inodeCache = new Inode[superBlock.totalInodes +1];
 		loadInodeCache(inodeCache);
 
-		// directory = new Directory(superBlock.totalInodes);
-		// fileTable = new FileStructureTable(directory);
+		directory = new Directory(superBlock.totalInodes);
+		fileTable = new FileTable(directory);
 
 		// FileTableEntry dirEnt = open("/", "r");
 		// int dirSize = fsize(dirEnt);
@@ -48,6 +48,9 @@ public class FileSystem {
 	}
 	
 	public int read(FileTableEntry ftEnt, byte[] buffer){
+		//int bufferSize = buffer.length;
+		
+		
 		//reads up to buffer.length bytes from the file indicated by fd, 
 		//starting at the position currently pointed to by the seek pointer. 
 		//If bytes remaining between the current seek pointer and the end of file are less 
@@ -68,25 +71,12 @@ public class FileSystem {
 		return Kernel.ERROR;
 	}
 	
-	public int open(String fileName, String mode){
-		//FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
+	public FileTableEntry open(String fileName, String mode){
+		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
-		//if bad - return null;
-
-		//if good - return newFileTableEntry;
-
-
-		//opens the file specified by the fileName string in the given mode (where 
-		//"r" = ready only, "w" = write only, "w+" = read/write, "a" = append), and allocates 
-		//a new file descriptor, fd to this file. The file is created if it does not exist in 
-		//the mode "w", "w+" or "a". SysLib.open must return a negative number as an error 
-		//value if the file does not exist in the mode "r". Note that the file descriptors 0, 
-		//1, and 2 are reserved as the standard input, output, and error, and therefore a newly 
-		//opened file must receive a new descriptor numbered in the range between 3 and 31. If 
-		//the calling thread's user file descriptor table is full, SysLib.open should return an 
-		//error value. The seek pointer is initialized to zero in the mode "r", "w", and "w+", 
-		//whereas initialized at the end of the file in the mode "a".
-		return Kernel.ERROR;
+		//TODO: SysLib.open must return a negative number as an error 
+		//value if the file does not exist in the mode "r".  
+		return newFileTableEntry;
 	}
 	
 	public int close(FileTableEntry ftEnt){
@@ -169,7 +159,7 @@ public class FileSystem {
 		if(SysLib.isError(freeINumber)) {
 			Inode n = inodeCache[freeINumber];
 			synchronized(n) {
-				n.flag = 1
+				n.flag = 1;
 			}
 			return n;
 		}
