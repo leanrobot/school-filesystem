@@ -79,11 +79,11 @@ public class FileSystem {
 		return newFileTableEntry;
 	}
 	
-	public int close(FileTableEntry ftEnt){
+	public boolean close(FileTableEntry ftEnt){
 		//closes the file corresponding to fd, commits all file transactions on this file, and 
 		//unregisters fd from the user file descriptor table of the calling thread's TCB. The 
 		//return value is 0 in success, otherwise -1.
-		return Kernel.ERROR;
+		return false;
 	}
 	
 	public int fsize(FileTableEntry ftEnt){
@@ -115,10 +115,10 @@ public class FileSystem {
 		return SysLib.isOk(status);
 	}
 	
-	public int delete(String fileName) {
+	public boolean delete(String fileName) {
 		//destroys the file specified by fileName. If the file is currently open, it is not 
 		//destroyed until the last open on it is closed, but new attempts to open it will fail.
-		return Kernel.ERROR;
+		return false;
 	}
 
 	/*
