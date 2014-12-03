@@ -92,19 +92,8 @@ public class FileSystem {
 	}
 	
 	public int seek(FileTableEntry ftEnt, int offset, int whence){
-		//Updates the seek pointer corresponding to fd as follows:
-		//If whence is SEEK_SET (= 0), the file's seek pointer is set to offset bytes 
-		//from the beginning of the file
-		//If whence is SEEK_CUR (= 1), the file's seek pointer is set to its current 
-		//value plus the offset. The offset can be positive or negative.
-		//If whence is SEEK_END (= 2), the file's seek pointer is set to the size of the 
-		//file plus the offset. The offset can be positive or negative. 
-		//If all cases you should clamp the seek pointer the size of the file. For example, 
-		//if the user attempts to set the seek pointer to a negative number you must clamp 
-		//it to zero. If the user attempts to set the pointer to beyond the file size, you 
-		//must set the seek pointer to the end of the file. In both cases, you should return 
-		//success.
-		return Kernel.ERROR;
+		//Updates the seek pointer of the ftEnt
+		return ftEnt.setSeekPtr(offset, whence);
 	}
 	
 	public boolean format(int maxInodes) {
