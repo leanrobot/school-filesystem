@@ -48,17 +48,12 @@ public class FileSystem {
 	}
 	
 	public int read(FileTableEntry ftEnt, byte[] buffer){
-		//int bufferSize = buffer.length;
-		
 		
 		//reads up to buffer.length bytes from the file indicated by fd, 
 		//starting at the position currently pointed to by the seek pointer. 
-		//If bytes remaining between the current seek pointer and the end of file are less 
-		//than buffer.length, SysLib.read reads as many bytes as possible, putting them into 
-		//the beginning of buffer. It increments the seek pointer by the number of bytes to 
-		//have been read. The return value is the number of bytes that have been read, or a 
-		//negative value upon an error.
-		return Kernel.ERROR;
+		
+		//Not sure if this is actually what it returns -BBB
+		return ftEnt.read(buffer);
 	}
 	
 	public int write(FileTableEntry ftEnt, byte[] buffer){
