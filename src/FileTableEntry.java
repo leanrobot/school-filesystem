@@ -101,4 +101,8 @@ public class FileTableEntry {  // Each table entry should have
     	seekPtr += bytesRead;		//increment seek ptr
     	return bytesRead;
     }
+    
+    public int size(){
+    	return inode.length;
+    }
 }

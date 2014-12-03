@@ -83,7 +83,7 @@ public class FileSystem {
 	
 	public int fsize(FileTableEntry ftEnt){
 		//returns the size in bytes of the file indicated by fd.
-		return Kernel.ERROR;
+		return ftEnt.size();
 	}
 	
 	public int seek(FileTableEntry ftEnt, int offset, int whence){
