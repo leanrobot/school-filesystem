@@ -31,7 +31,7 @@ public class FileSystem {
 		}
 		return Kernel.OK;
 	}
-	
+
 	public void sync(){
 		SysLib.cout("Syncing Filesystem to disk\n");
 		superBlock.sync();
@@ -55,17 +55,82 @@ public class FileSystem {
 		//Not sure if this is actually what it returns -BBB
 		return ftEnt.read(buffer);
 	}
-	
-	public int write(FileTableEntry ftEnt, byte[] buffer){
 
-		//writes the contents of buffer to the file indicated by fd, starting at the 
-		//position indicated by the seek pointer. The operation may overwrite existing data 
-		//in the file and/or append to the end of the file. SysLib.write increments the seek 
-		//pointer by the number of bytes to have been written. The return value is the number 
-		//of bytes that have been written, or a negative value upon an error.
-		return Kernel.ERROR;
-	}
+	// TODO
+	//		Error handling of statuses return from raw read/write.
+	//		Allocation of indirect blocks.
+	//		check to see if the fte is open.
+	public int write(FileTableEntry fte, byte[] buffer){
+    	byte[] blockData = getBlockArray();
+    	int seekPtr = fte.seekPtr;
+    	int status;
+
+    	for(int bufferIndex=0; bufferIndex<buffer.length; bufferIndex++) {
+    		int blockId = getSeekBlock(fte.inode, seekPtr);
+    		// if the block is unallocated, allocate a new one for the inode.
+            if(blockId == Inode.UNALLOCATED) {
+            	//TODO handling of allocation error, return # of bytes written instead?
+                blockId = allocateNewBlock(inode);
+                if(SysLib.isError(blockId)) {
+                	return Kernel.ERROR;
+            	}
+            }
+            // read the block to memory.
+    		status = SysLib.rawread(blockId, blockData);
+
+    		// move the data from the buffer into the block.
+            for(int blockOffset=seekPtr % Disk.blockSize;
+            	blockOffset < blockData.length && bufferIndex < buffer.length;
+            	bufferIndex++, blockOffset++, seekPtr++) {
+
+            	blockData[blockOffset] = buffer[bufferIndex];
+            }
+            // Writing to this block is completed, write it back to the disk.
+            status = SysLib.rawwrite(blockId, blockData);
+    	}
+
+    	// copy operation is complete, update inode and file table entry structures.
+    	if(seekPtr > inode.length) {
+    		inode.length = seekPtr;
+    	}
+    	fte.seekPtr = seekPtr;
+        // compute the offset in that block.
+        // writes the contents of buffer to the file indicated by fd, starting at the 
+        // position indicated by the seek pointer. The operation may overwrite existing data 
+        // in the file and/or append to the end of the file. SysLib.write increments the seek 
+        // pointer by the number of bytes to have been written. The return value is the number 
+        // of bytes that have been written, or a negative value upon an error.
+
+    }
+
+    // TODO add handling for indirect file handles.
+    protected int static allocateNewBlock(Inode inode) {
+        int newBlock = acquireFreeBlock();
+        if(!SysLib.isError(newBlock)) {
+        	for(int i=0; i<inode.direct.length; i++) {
+        		if(inode.direct[i] == Inode.UNALLOCATED) {
+        			inode.direct[i] = newBlock;
+        			return Kernel.OK;
+        		}
+        	}
+        }
+        return Kernel.ERROR;
+    }
+
+    // TODO add handling for indirect file handles.
+    protected static int getSeekBlock(Inode inode, int seekPtr) {
+        // retrieve the direct list from the inode.
+        int directIndex = seekPtr/Disk.blockSize;
+        return direct[directIndex];
+    }
+
+    protected static int getSeekOffset(int seekPtr) {
+        return seekPtr % Disk.blockSize;
+    }
 	
+
+
+
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
@@ -92,9 +157,6 @@ public class FileSystem {
 	}
 	
 	public boolean format(int maxInodes) {
-		//formats the disk, (i.e., Disk.java's data contents). The parameter files specifies 
-		//the maximum number of files to be created, (i.e., the number of inodes to be 
-		//allocated) in your file system. The return value is 0 on success, otherwise -1.
 		int status = superBlock.format(maxInodes);
 		return SysLib.isOk(status);
 	}
@@ -115,7 +177,9 @@ public class FileSystem {
 	*/
 
 	public int acquireFreeBlock() {
-		return superBlock.freeList++;
+		if(superBlock.freeList < superBlock.totalBlocks)
+			return superBlock.freeList++;
+		return Kernel.ERROR;
 	}
 
 	public Inode getInode(short iNumber) {
@@ -149,5 +213,63 @@ public class FileSystem {
 		}
 		return null;
 	}
+
+    public static int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
+        if(blockId < 0  ||
+            blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
+
+            throw new FileSystemException("invalid blockId, or offset for write");
+        }
+
+        byte[] diskContents = new byte[Disk.blockSize];
+
+        int status = SysLib.rawread(blockId, diskContents);
+
+        if(SysLib.isError(status)) {
+            throw new FileSystemException("Error read specific data off of disk");
+        }
+
+        for(int offset = blockOffset, i=0; 
+            i < data.length && offset < diskContents.length;
+            offset++, i++) {
+
+            data[i] = diskContents[offset];
+        }
+
+        return Kernel.OK;
+    }
+
+
+   public static int writeRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
+      // check the following
+      //    blockId is valid, offset + data.length < blockLength
+      if(blockId < 0  ||
+         blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
+         
+         throw new FileSystemException("invalid blockId, or offset for write");
+      }
+
+      byte[] diskContents = getBlockArray();
+      int status = SysLib.rawread(blockId, diskContents);
+
+      if(SysLib.isError(status)) {
+         throw new FileSystemException("raw write was unsuccessful");
+      }
+
+      for(int offset = blockOffset, i=0;
+          offset < blockOffset + data.length && i < data.length; 
+          offset++, i++) {
+
+         diskContents[offset] = data[i];
+      }
+
+      status = SysLib.rawwrite(blockId, diskContents);
+
+      return Kernel.OK;
+   }
+
+    public static byte[] getBlockArray() {
+        return new byte[Disk.blockSize];
+    }
 
 }
