@@ -49,7 +49,7 @@ public class FileTableEntry {  // Each table entry should have
             this.seekPtr = setPtrTo;
         }
     	
-    	return Kernel.OK;
+    	return this.seekPtr;
     }
 
     public int size(){
