@@ -2,20 +2,26 @@ public class Inode {
     private final static int iNodeSize = 32;       // fix to 32 bytes
     private final static int directSize = 11;      // # direct pointers
 
-   public int length;                             // file size in bytes
-   public short count;                            // # file-table entries pointing to this
-   public short flag;                             // 0 = unused, 1 = used, ...
-   public short direct[] = new short[directSize]; // direct pointers
-   public short indirect;                         // a indirect pointer
+    public int length;                             // file size in bytes
+    public short count;                            // # file-table entries pointing to this
+    public short flag;                             // 0 = unused, 1 = used, ...
+    public short direct[] = new short[directSize]; // direct pointers
+    public short indirect;                         // a indirect pointer
 
-   Inode( ) {                                     // a default constructor
-      length = 0;
-      count = 0;
-      flag = 1;
-      for ( int i = 0; i < directSize; i++ )
-         direct[i] = -1;
-      indirect = -1;
-   }
+    public static final int FLAG_UNUSED = 0;
+    public static final int FLAG_USED = 1;
+
+    public static final int UNALLOCATED = -1;
+    //public static final int ...
+
+    Inode( ) {                                     // a default constructor
+        length = 0;
+        count = 0;
+        flag = FLAG_UNUSED;
+        for ( int i = 0; i < directSize; i++ )
+           direct[i] = UNALLOCATED;
+        indirect = UNALLOCATED;
+    }
 
     Inode( short iNumber ) {                       // retrieving inode from disk
         // design it by yourself.
@@ -27,7 +33,7 @@ public class Inode {
 
         try {
             int offset = 0;
-            readRawData(iNodeData, blockId, blockOffset);
+            FileSystem.readRawData(iNodeData, blockId, blockOffset);
 
             // read the length (int)
             this.length = SysLib.bytes2int(iNodeData, offset);
@@ -93,7 +99,7 @@ public class Inode {
 
         //write the iNode;
         try{
-            writeRawData(iNodeData, blockId, blockOffset);
+            FileSystem.writeRawData(iNodeData, blockId, blockOffset);
         } catch (FileSystemException e) {
             //TODO error handling
             throw e;
@@ -101,61 +107,5 @@ public class Inode {
         return Kernel.OK;
     }
 
-    public int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
-        if(blockId < 0  ||
-            blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
 
-            throw new FileSystemException("invalid blockId, or offset for write");
-        }
-
-        byte[] diskContents = new byte[Disk.blockSize];
-
-        int status = SysLib.rawread(blockId, diskContents);
-
-        if(SysLib.isError(status)) {
-            throw new FileSystemException("Error read specific data off of disk");
-        }
-
-        for(int offset = blockOffset, i=0; 
-            i < data.length && offset < diskContents.length;
-            offset++, i++) {
-
-            data[i] = diskContents[offset];
-        }
-
-        return Kernel.OK;
-    }
-
-
-   public int writeRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
-      // check the following
-      //    blockId is valid, offset + data.length < blockLength
-      if(blockId < 0  ||
-         blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
-         
-         throw new FileSystemException("invalid blockId, or offset for write");
-      }
-
-      byte[] diskContents = getBlockArray();
-      int status = SysLib.rawread(blockId, diskContents);
-
-      if(SysLib.isError(status)) {
-         throw new FileSystemException("raw write was unsuccessful");
-      }
-
-      for(int offset = blockOffset, i=0;
-          offset < blockOffset + data.length && i < data.length; 
-          offset++, i++) {
-
-         diskContents[offset] = data[i];
-      }
-
-      status = SysLib.rawwrite(blockId, diskContents);
-
-      return Kernel.OK;
-   }
-
-    private byte[] getBlockArray() {
-        return new byte[Disk.blockSize];
-    }
 }
