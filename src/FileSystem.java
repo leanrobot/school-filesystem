@@ -308,5 +308,31 @@ public class FileSystem {
     public static byte[] getBlockArray() {
         return new byte[Disk.blockSize];
     }
+    // James
+    private void deallocateInode(Inode toDeallocate) {
+    	int seekptr = toDeallocate.length;
+    	int block = getSeekBlock(toDeallocate, seekptr);
+    	
+    	while (seekptr > 0) {
+    		block = getSeekBlock(toDeallocate, seekptr);
+    		superBlock.returnBlock(block);
+    		seekptr -= Disk.blockSize;
+    	}
+    	
+    	// check for indirect blocks, return them if they exists
+    	if(toDeallocate.indirect != -1) {
+    		superBlock.returnBlock(toDeallocate.indirect);
+    	}
+    	
+    	// reset all variables
+    	toDeallocate.count = 0;
+    	toDeallocate.length = 0;
+    	toDeallocate.flag = -1;
+    	
+    	// reset all direct pointers
+    	for (int i = 0; i < toDeallocate.direct.length; ++i) {
+    		toDeallocate.direct[i] = -1;
+       	}
+    }
 
 }
