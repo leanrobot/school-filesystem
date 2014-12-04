@@ -11,7 +11,7 @@ public class Inode {
     public static final int FLAG_UNUSED = 0;
     public static final int FLAG_USED = 1;
 
-    public static final int UNALlOCATED = -1;
+    public static final int UNALLOCATED = -1;
     //public static final int ...
 
     Inode( ) {                                     // a default constructor
@@ -19,8 +19,8 @@ public class Inode {
         count = 0;
         flag = FLAG_UNUSED;
         for ( int i = 0; i < directSize; i++ )
-           direct[i] = UNALlOCATED;
-        indirect = UNALlOCATED;
+           direct[i] = UNALLOCATED;
+        indirect = UNALLOCATED;
     }
 
     Inode( short iNumber ) {                       // retrieving inode from disk

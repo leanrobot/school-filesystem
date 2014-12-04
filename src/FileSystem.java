@@ -89,18 +89,15 @@ public class FileSystem {
             status = SysLib.rawwrite(blockId, blockData);
     	}
 
+    	// calculate the amount written
+    	int amountWritten = seekPtr - fte.seekPtr;
     	// copy operation is complete, update inode and file table entry structures.
     	if(seekPtr > fte.inode.length) {
     		fte.inode.length = seekPtr;
     	}
     	fte.seekPtr = seekPtr;
-        // compute the offset in that block.
-        // writes the contents of buffer to the file indicated by fd, starting at the 
-        // position indicated by the seek pointer. The operation may overwrite existing data 
-        // in the file and/or append to the end of the file. SysLib.write increments the seek 
-        // pointer by the number of bytes to have been written. The return value is the number 
-        // of bytes that have been written, or a negative value upon an error.
-
+    	
+    	return amountWritten;
     }
 
     // TODO add handling for indirect file handles.
@@ -121,7 +118,9 @@ public class FileSystem {
     protected static int getSeekBlock(Inode inode, int seekPtr) {
         // retrieve the direct list from the inode.
         int directIndex = seekPtr/Disk.blockSize;
-        return inode.direct[directIndex];
+        if(directIndex < inode.direct.length)
+	        return inode.direct[directIndex];
+	    return Inode.UNALLOCATED;
     }
 
     protected static int getSeekOffset(int seekPtr) {
