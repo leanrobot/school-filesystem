@@ -1,0 +1,4 @@
+*DISK
+*.class
+/bin/
+*.DS_Store
