@@ -18,6 +18,10 @@ public class FileTableEntry {  // Each table entry should have
         if ( mode.compareTo( "a" ) == 0 )
             seekPtr = inode.length;
     }
+
+    public boolean isOpen() {
+        return count > 0;
+    }
     
     public int setSeekPtr(int offset, int whence){
     	int success = -1;

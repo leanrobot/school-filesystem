@@ -60,7 +60,10 @@ public class FileSystem {
 	//		Error handling of statuses return from raw read/write.
 	//		Allocation of indirect blocks.
 	//		check to see if the fte is open.
-	public int write(FileTableEntry fte, byte[] buffer){
+	public int write(FileTableEntry fte, byte[] buffer) {
+		if(!fte.isOpen() && !fte.mode.equals("r")) {
+			return Kernel.ERROR;
+		}
     	byte[] blockData = getBlockArray();
     	int seekPtr = fte.seekPtr;
     	int status;
@@ -127,9 +130,6 @@ public class FileSystem {
         return seekPtr % Disk.blockSize;
     }
 	
-
-
-
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
@@ -142,7 +142,14 @@ public class FileSystem {
 		//closes the file corresponding to fd, commits all file transactions on this file, and 
 		//unregisters fd from the user file descriptor table of the calling thread's TCB. The 
 		//return value is 0 in success, otherwise -1.
-		return false;
+		ftEnt.inode.count--;
+		if(ftEnt.inode.count<=0) {
+			ftEnt.seekPtr = 0;
+			//ftEnt.inode = null;
+			//ftEnt.iNumber = Inode.UNALLOCATED;
+			//ftEnt.mode = null;
+		}
+		return true;
 	}
 	
 	public int fsize(FileTableEntry ftEnt){
