@@ -70,7 +70,7 @@ public class FileSystem {
     		// if the block is unallocated, allocate a new one for the inode.
             if(blockId == Inode.UNALLOCATED) {
             	//TODO handling of allocation error, return # of bytes written instead?
-                blockId = allocateNewBlock(inode);
+                blockId = allocateNewBlock(fte.inode);
                 if(SysLib.isError(blockId)) {
                 	return Kernel.ERROR;
             	}
@@ -90,8 +90,8 @@ public class FileSystem {
     	}
 
     	// copy operation is complete, update inode and file table entry structures.
-    	if(seekPtr > inode.length) {
-    		inode.length = seekPtr;
+    	if(seekPtr > fte.inode.length) {
+    		fte.inode.length = seekPtr;
     	}
     	fte.seekPtr = seekPtr;
         // compute the offset in that block.
@@ -104,12 +104,12 @@ public class FileSystem {
     }
 
     // TODO add handling for indirect file handles.
-    protected int static allocateNewBlock(Inode inode) {
+    protected int allocateNewBlock(Inode inode) {
         int newBlock = acquireFreeBlock();
         if(!SysLib.isError(newBlock)) {
         	for(int i=0; i<inode.direct.length; i++) {
         		if(inode.direct[i] == Inode.UNALLOCATED) {
-        			inode.direct[i] = newBlock;
+        			inode.direct[i] = (short) newBlock;
         			return Kernel.OK;
         		}
         	}
@@ -121,7 +121,7 @@ public class FileSystem {
     protected static int getSeekBlock(Inode inode, int seekPtr) {
         // retrieve the direct list from the inode.
         int directIndex = seekPtr/Disk.blockSize;
-        return direct[directIndex];
+        return inode.direct[directIndex];
     }
 
     protected static int getSeekOffset(int seekPtr) {
