@@ -196,9 +196,12 @@ public class FileSystem {
 		ftEnt.inode.count--;
 		if(ftEnt.inode.count<=0) {
 			ftEnt.seekPtr = 0;
-			//ftEnt.inode = null;
-			//ftEnt.iNumber = Inode.UNALLOCATED;
-			//ftEnt.mode = null;
+			if (ftEnt.inode.flag == Inode.FLAG_DELETE){
+				short iNumber = ftEnt.iNumber;
+				boolean deleted = directory.ifree(iNumber);
+				ftEnt.inode.flag = Inode.FLAG_UNUSED;
+				return deleted;
+			}
 		}
 		return true;
 	}
@@ -221,7 +224,20 @@ public class FileSystem {
 	public boolean delete(String fileName) {
 		//destroys the file specified by fileName. If the file is currently open, it is not 
 		//destroyed until the last open on it is closed, but new attempts to open it will fail.
-		return false;
+		
+		//count on the iNode is correct
+		boolean deleted = false;
+		short fileINum = directory.namei(fileName);
+		Inode deleteInode = getInode(fileINum);
+		if (deleteInode.count == 0){			//not open, delete
+			deleted = directory.ifree(fileINum);
+			deleteInode.flag = Inode.FLAG_UNUSED;		
+		}
+		else{
+			deleteInode.flag = Inode.FLAG_DELETE;		//prevent new attempts from opening but does not delete
+		}
+		
+		return deleted;
 	}
 
 	/*

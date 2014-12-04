@@ -10,7 +10,7 @@ public class Inode {
 
     public static final int FLAG_UNUSED = 0;
     public static final int FLAG_USED = 1;
-
+    public static final int FLAG_DELETE = 2;
     public static final int UNALLOCATED = -1;
     //public static final int ...
 

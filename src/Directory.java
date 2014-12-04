@@ -81,6 +81,12 @@ public class Directory {
          // the corresponding file will be deleted.
          if (fsize[iNumber] > 0){
             fsize[iNumber] = 0;
+            
+            //delete filename
+            for(int i =0; i < maxChars; i++){
+            	fnames[iNumber][i] = '\0';
+            }
+            
             return true;
          }
          // not needed to delete
