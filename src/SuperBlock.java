@@ -18,9 +18,10 @@ public class SuperBlock {
 			//disk contents are valid
 			return;
 		} else {
+			// need to format disk
+			totalBlocks = diskSize;
 			format(defaultInodeBlocks);
 		}
-
 	}
 
 
@@ -29,8 +30,6 @@ public class SuperBlock {
 
 		totalBlocks = DEFAULT_TOTAL_BLOCKS;
 		totalInodes = numInodes;
-		// finds the last block an inode is allocated in, and adds 1.
-		freeList = Inode.getInodeBlock((short)numInodes) +1;
 
 		for (short i= 1; i <= numInodes; ++i) {
 			Inode temp = new Inode();
@@ -56,12 +55,20 @@ public class SuperBlock {
 		
 		// check for succes and print messages accordingly
 		if (SysLib.isOk(retval)) {
-			SysLib.cout("Superblock synchronized\n");
+			SysLib.cout("Superblock synchronized");
 		} else {
-			SysLib.cout("Failure when synchronizing superblock\n");
+			SysLib.cout("Failure when synchronizing superblock");
 		}
 		
 		return retval;
 	}
 
+    // James
+	public boolean returnBlock(int oldBlockNum){
+		byte[] buffer = new byte[Disk.blockSize];
+		SysLib.short2bytes((short)freeList, buffer, 0);
+		SysLib.rawwrite(oldBlockNum, buffer);
+		freeList = oldBlockNum;
+		return true;
+	}
 }
