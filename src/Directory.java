@@ -15,6 +15,8 @@ public class Directory {
          root.getChars( 0, fsize[0], fnames[0], 0 ); // fnames[0] includes "/"
       }
 
+
+      // converts plain byte array info into a directory, the byte array is read from disk
       public void bytes2directory( byte[] data ) {
          // assumes data[] received directory information from disk
          // initializes the Directory instance with this data[]
@@ -33,6 +35,7 @@ public class Directory {
          }
       }
 
+      //Converts directory information into a plain byte array to be written back to the disk
       public byte[] directory2bytes( ) {
          // converts and return Directory information into a plain byte array
          // this byte array will be written back to disk
