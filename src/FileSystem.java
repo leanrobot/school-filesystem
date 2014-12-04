@@ -68,7 +68,7 @@ public class FileSystem {
     	int seekPtr = fte.seekPtr;
     	int status;
 
-    	for(int bufferIndex=0; bufferIndex<buffer.length; bufferIndex++) {
+    	for(int bufferIndex=0; bufferIndex<buffer.length; /*bufferIndex++*/) {
     		int blockId = getSeekBlock(fte.inode, seekPtr);
     		// if the block is unallocated, allocate a new one for the inode.
             if(blockId == Inode.UNALLOCATED) {
