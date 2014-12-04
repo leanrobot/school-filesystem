@@ -49,7 +49,10 @@ public class FileSystem {
 	
 	public int read(FileTableEntry fte, byte[] buffer){
 		//reads up to buffer.length bytes from the file indicated by fte, 
-		//starting at the position currently pointed to by the seek pointer. 
+		//starting at the position currently pointed to by the seek pointer.
+		if(!fte.isOpen() || !(fte.mode.equals("r") || fte.mode.equals("w+"))) {
+			return Kernel.ERROR;
+		}
 		
     	byte[] blockData = getBlockArray();
     	int seekPtr = fte.seekPtr;
@@ -89,7 +92,7 @@ public class FileSystem {
 	//		Allocation of indirect blocks.
 	//		check to see if the fte is open.
 	public int write(FileTableEntry fte, byte[] buffer) {
-		if(!fte.isOpen() && !fte.mode.equals("r")) {
+		if(!fte.isOpen() || fte.mode.equals("r")) {
 			return Kernel.ERROR;
 		}
     	byte[] blockData = getBlockArray();
