@@ -47,13 +47,41 @@ public class FileSystem {
 		SysLib.cout("\nFileSystem Synced!\n");
 	}
 	
-	public int read(FileTableEntry ftEnt, byte[] buffer){
-		
-		//reads up to buffer.length bytes from the file indicated by fd, 
+	public int read(FileTableEntry fte, byte[] buffer){
+		//reads up to buffer.length bytes from the file indicated by fte, 
 		//starting at the position currently pointed to by the seek pointer. 
 		
-		//Not sure if this is actually what it returns -BBB
-		return ftEnt.read(buffer);
+    	byte[] blockData = getBlockArray();
+    	int seekPtr = fte.seekPtr;
+    	int status;
+    	
+    	for(int bufferIndex=0; bufferIndex<buffer.length && seekPtr < fte.inode.length; /*bufferIndex++*/) {
+    		int blockId = getSeekBlock(fte.inode, seekPtr);
+    		// if the block is unallocated, return an error
+            if(blockId == Inode.UNALLOCATED) {
+                return Kernel.ERROR;
+            }
+            // read the block to memory.
+    		status = SysLib.rawread(blockId, blockData);
+    		if (SysLib.isError(status)){
+    			return Kernel.ERROR;
+    		}
+
+    		// move the data from the block into the buffer
+            for(int blockOffset=seekPtr % Disk.blockSize;
+            	blockOffset < blockData.length && bufferIndex < buffer.length;
+            	bufferIndex++, blockOffset++, seekPtr++) {
+
+            	buffer[bufferIndex] = blockData[blockOffset];
+            }
+    	}
+
+    	// calculate the amount read
+    	int amountRead = seekPtr - fte.seekPtr;
+    	// copy operation is complete, update inode and file table entry structures.
+    	fte.seekPtr = seekPtr;
+    	
+    	return amountRead;
 	}
 
 	// TODO
