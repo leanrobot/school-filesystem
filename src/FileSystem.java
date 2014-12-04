@@ -161,11 +161,31 @@ public class FileSystem {
         return seekPtr % Disk.blockSize;
     }
 	
+	// James
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
+		
+		short inode = directory.namei(fileName);
 
-		//TODO: SysLib.open must return a negative number as an error 
-		//value if the file does not exist in the mode "r".  
+		// If Inode does not exist, cannot be opened in read mode, if not read mode, allocate
+		if (inode < 0 ) {
+			if (mode.equals("r")) {
+				return null;
+			} else {
+				directory.ialloc(fileName);
+			}
+		} 
+	
+		// if mode is write, blow away all blocks in the inode. 
+		// if mode is append, set seekptr to the end of the data.
+		if(mode.equals("w")) {
+			deallocateInode(newFileTableEntry.inode);
+		} else if (mode.equals("a")) {
+			newFileTableEntry.seekPtr = newFileTableEntry.inode.length;
+		} else {
+			// Handle w+ or r ? I dont think we need to....
+		}
+		
 		return newFileTableEntry;
 	}
 	
