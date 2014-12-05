@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 
 public class FileSystem {
 	private SuperBlock superBlock;
@@ -136,11 +138,44 @@ public class FileSystem {
 
     // TODO add handling for indirect file handles.
     protected int allocateNewBlock(Inode inode) {
+    	int status;
+    	
         int newBlock = acquireFreeBlock();
         if(!SysLib.isError(newBlock)) {
+        	// allocating direct blocks
         	for(int i=0; i<inode.direct.length; i++) {
         		if(inode.direct[i] == Inode.UNALLOCATED) {
         			inode.direct[i] = (short) newBlock;
+        			return Kernel.OK;
+        		}
+        	}
+        	// allocating indirect blocks
+        	// if this is the first indirect allocation, we need to setup an indirect block.
+        	int indirectBlock = inode.indirect;
+        	if(indirectBlock == Inode.UNALLOCATED) {
+        		indirectBlock = acquireFreeBlock();
+        		if(SysLib.isError(indirectBlock)) {
+        			return Kernel.ERROR;
+        		}
+        		inode.indirect = (short)indirectBlock;
+        		// initialize the indirect block
+        		byte[] indirect = getBlockArray();
+        		for(int offset=0; offset<indirect.length; offset+=2) {
+        			SysLib.short2bytes((short)Inode.UNALLOCATED, indirect, offset);
+        		}
+        		SysLib.rawwrite(inode.indirect, indirect);
+        	}
+        	byte[] indirect = getBlockArray();
+        	status = SysLib.rawread(indirectBlock, indirect);
+
+        	for(int offset=0; offset<indirect.length; offset+=2) {
+        		short cur = SysLib.bytes2short(indirect, offset);
+        		if(cur == Inode.UNALLOCATED) {
+        			newBlock = acquireFreeBlock();
+        			if(SysLib.isError(newBlock)) {
+        				return Kernel.ERROR;
+        			}
+        			SysLib.short2bytes((short)newBlock, indirect, offset);
         			return Kernel.OK;
         		}
         	}
@@ -151,10 +186,32 @@ public class FileSystem {
     // TODO add handling for indirect file handles.
     protected static int getSeekBlock(Inode inode, int seekPtr) {
         // retrieve the direct list from the inode.
-        int directIndex = seekPtr/Disk.blockSize;
-        if(directIndex < inode.direct.length)
-	        return inode.direct[directIndex];
+        int index = seekPtr/Disk.blockSize;
+        if(index < inode.direct.length)
+	        return inode.direct[index];
+        // check if the indirect block is set.
+        if(inode.indirect != Inode.UNALLOCATED) {
+        	short[] indirect = getIndirectArray(inode);
+        	index -= inode.direct.length;
+        	return indirect[index];
+        }
 	    return Inode.UNALLOCATED;
+    }
+    
+    public static short[] getIndirectArray(Inode inode) {
+    	int status;
+    	int indirectBlockId = inode.indirect;
+    	
+    	byte[] blockData = getBlockArray();
+    	short[] indirectBlocks = new short[blockData.length/2];
+    	
+    	status = SysLib.rawread(indirectBlockId, blockData);
+    	
+    	for(int offset=0, indirectOffset=0; offset<blockData.length; offset+=2, indirectOffset++){
+    		indirectBlocks[indirectOffset] = SysLib.bytes2short(blockData, offset);
+    	}
+    	
+    	return indirectBlocks;	
     }
 
     protected static int getSeekOffset(int seekPtr) {
