@@ -22,8 +22,7 @@ public class FileSystem {
 
 	public FileSystem( int diskBlocks) {
 		superBlock = new SuperBlock(diskBlocks);
-		inodeCache = new Inode[superBlock.totalInodes +1];
-		loadInodeCache(inodeCache);
+		initInodeCache(superBlock.totalInodes +1);
 
 		directory = new Directory(superBlock.totalInodes);
 		fileTable = new FileTable(this, directory);
@@ -38,9 +37,10 @@ public class FileSystem {
 		close (dirEnt);
 	}
 
-	public int loadInodeCache(Inode[] cache) {
-		for(short i=1; i<cache.length; i++) {
-			cache[i] = new Inode(i);
+	public int initInodeCache(int totalInodes) {
+		inodeCache = new Inode[totalInodes];
+		for(short i=1; i<inodeCache.length; i++) {
+			inodeCache[i] = new Inode(i);
 		}
 		return Kernel.OK;
 	}
@@ -57,8 +57,8 @@ public class FileSystem {
 				SysLib.cout(".");
 			}
 		}
-		int dirFd = SysLib.open("/", "w");
-		SysLib.write(dirFd, this.directory.directory2bytes());
+		FileTableEntry dirEnt = open("/", "w");
+		write(dirEnt, directory.directory2bytes());
 		SysLib.cout("\nFileSystem Synced!\n");
 	}
 	
@@ -233,7 +233,6 @@ public class FileSystem {
         return seekPtr % Disk.blockSize;
     }
 	
-	// James
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 		
@@ -296,9 +295,11 @@ public class FileSystem {
 	}
 	
 	public boolean format(int maxInodes) {
+		initInodeCache(maxInodes);
 		int status = superBlock.format(maxInodes);
 		sync();
 		this.directory = new Directory(maxInodes);
+		this.fileTable = new FileTable(this, this.directory);
 		return SysLib.isOk(status);
 	}
 	
@@ -409,18 +410,19 @@ public class FileSystem {
     private void deallocateInode(Inode toDeallocate) {
     	
     	// check for indirect blocks, return them if they exists
-    	if(toDeallocate.indirect != -1) {
-    		toDeallocate.indirect = -1;
+    	if(toDeallocate.indirect != Inode.UNALLOCATED) {
+    		//superBlock.returnBlock(toDeallocate.indirect);
+    		toDeallocate.indirect = Inode.UNALLOCATED;
     	}
     	
     	// reset all variables
     	toDeallocate.count = 0;
     	toDeallocate.length = 0;
-    	toDeallocate.flag = -1;
+    	toDeallocate.flag = Inode.FLAG_UNUSED;
     	
     	// reset all direct pointers
     	for (int i = 0; i < toDeallocate.direct.length; ++i) {
-    		toDeallocate.direct[i] = -1;
+    		toDeallocate.direct[i] = Inode.UNALLOCATED;
        	}
     }
 

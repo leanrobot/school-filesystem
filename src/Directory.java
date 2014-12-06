@@ -41,7 +41,7 @@ public class Directory {
          // this byte array will be written back to disk
          // note: only meaningfull directory information should be converted
          // into bytes.
-         int dataSize = (fsize.length * 4) + (fnames.length * maxChars);
+         int dataSize = (fsize.length * 4) + (fnames.length * maxChars * 2);
          byte[] data = new byte[dataSize];
 
          int offset = 0;
