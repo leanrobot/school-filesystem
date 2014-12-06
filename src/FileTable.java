@@ -19,9 +19,6 @@ public class FileTable {
             iNumber = dir.ialloc(filename);
          }
          Inode node = fs.getInode(iNumber);
-         if (node.flag == Inode.FLAG_DELETE){
-        	 return null;
-         }
          
          FileTableEntry fte = new FileTableEntry(node, iNumber, mode);
          synchronized(node) {

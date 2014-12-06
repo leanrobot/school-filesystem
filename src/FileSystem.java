@@ -231,7 +231,12 @@ public class FileSystem {
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 		
+		if (newFileTableEntry.inode.flag == Inode.FLAG_DELETE){
+			return null;
+		}
+		
 		short inode = directory.namei(fileName);
+		
 
 		// If Inode does not exist, cannot be opened in read mode, if not read mode, allocate
 		if (inode < 0 ) {
@@ -266,6 +271,7 @@ public class FileSystem {
 				short iNumber = ftEnt.iNumber;
 				boolean deleted = directory.ifree(iNumber);
 				ftEnt.inode.flag = Inode.FLAG_UNUSED;
+				deallocateInode(ftEnt.inode);
 				return deleted;
 			}
 		}
@@ -298,7 +304,8 @@ public class FileSystem {
 		Inode deleteInode = getInode(fileINum);
 		if (deleteInode.count == 0){			//not open, delete
 			deleted = directory.ifree(fileINum);
-			deleteInode.flag = Inode.FLAG_UNUSED;		
+			deallocateInode(deleteInode);
+			deleteInode.flag = Inode.FLAG_DELETE;
 		}
 		else{
 			deleteInode.flag = Inode.FLAG_DELETE;		//prevent new attempts from opening but does not delete
@@ -413,18 +420,19 @@ public class FileSystem {
     }
     // James
     private void deallocateInode(Inode toDeallocate) {
-    	int seekptr = toDeallocate.length;
-    	int block = getSeekBlock(toDeallocate, seekptr);
+    	//int seekptr = toDeallocate.length;
+    	//int block = getSeekBlock(toDeallocate, seekptr);
     	
-    	while (seekptr > 0) {
-    		block = getSeekBlock(toDeallocate, seekptr);
-    		superBlock.returnBlock(block);
-    		seekptr -= Disk.blockSize;
-    	}
+//    	while (seekptr > 0) {
+//    		block = getSeekBlock(toDeallocate, seekptr);
+//    		superBlock.returnBlock(block);
+//    		seekptr -= Disk.blockSize;
+//    	}
     	
     	// check for indirect blocks, return them if they exists
     	if(toDeallocate.indirect != -1) {
-    		superBlock.returnBlock(toDeallocate.indirect);
+    		//superBlock.returnBlock(toDeallocate.indirect);
+    		toDeallocate.indirect = -1;
     	}
     	
     	// reset all variables

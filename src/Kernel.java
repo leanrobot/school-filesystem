@@ -199,7 +199,9 @@ public class Kernel
                      FileTableEntry fte = fs.open( s[0], s[1] );
                      int check = myTcb.getFd(fte);
                      if (SysLib.isError(check)){
-                    	 fs.close(fte);
+                    	 if (fte != null){
+                    		 fs.close(fte);
+                    	 }
                      }
                      return check;
                   } else
