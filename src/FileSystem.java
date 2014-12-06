@@ -46,6 +46,8 @@ public class FileSystem {
 				SysLib.cout(".");
 			}
 		}
+		int dirFd = SysLib.open("/", "w");
+		SysLib.write(dirFd, this.directory.directory2bytes());
 		SysLib.cout("\nFileSystem Synced!\n");
 	}
 	
@@ -291,6 +293,7 @@ public class FileSystem {
 	public boolean format(int maxInodes) {
 		int status = superBlock.format(maxInodes);
 		sync();
+		this.directory = new Directory(maxInodes);
 		return SysLib.isOk(status);
 	}
 	
