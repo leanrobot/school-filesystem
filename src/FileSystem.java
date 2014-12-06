@@ -62,9 +62,9 @@ public class FileSystem {
 		SysLib.cout("\nFileSystem Synced!\n");
 	}
 	
+	//reads up to buffer.length bytes from the file indicated by fte, 
+	//starting at the position currently pointed to by the seek pointer.
 	public int read(FileTableEntry fte, byte[] buffer){
-		//reads up to buffer.length bytes from the file indicated by fte, 
-		//starting at the position currently pointed to by the seek pointer.
 		if(!fte.isOpen() || !(fte.mode.equals("r") || fte.mode.equals("w+"))) {
 			return Kernel.ERROR;
 		}
@@ -259,8 +259,6 @@ public class FileSystem {
 			deallocateInode(newFileTableEntry.inode);
 		} else if (mode.equals("a")) {
 			newFileTableEntry.seekPtr = newFileTableEntry.inode.length;
-		} else {
-			// Handle w+ or r ? I dont think we need to....
 		}
 		
 		return newFileTableEntry;
