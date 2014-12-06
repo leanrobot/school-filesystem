@@ -1,3 +1,14 @@
+/******************************************************************************
+* SysLib.java
+* Programmed by: Brittany Bentley, James Hurd, Thomas Petit
+* Class: CSS430 - Operating Systems
+* Quarter: Autumn 2014
+* University of Washington, Bothell
+*  
+*
+******************************************************************************/
+
+
 import java.util.*;
 
 public class SysLib {
