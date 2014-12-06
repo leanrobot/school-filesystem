@@ -30,6 +30,7 @@ public class SuperBlock {
 
 		totalBlocks = DEFAULT_TOTAL_BLOCKS;
 		totalInodes = numInodes;
+		freeList = Inode.getInodeBlock((short)totalInodes)+1;
 
 		for (short i= 1; i <= numInodes; ++i) {
 			Inode temp = new Inode();

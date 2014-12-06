@@ -146,28 +146,36 @@ public class FileSystem {
         	for(int i=0; i<inode.direct.length; i++) {
         		if(inode.direct[i] == Inode.UNALLOCATED) {
         			inode.direct[i] = (short) newBlock;
-        			return Kernel.OK;
+        			return newBlock;
         		}
         	}
         	// allocating indirect blocks
         	// if this is the first indirect allocation, we need to setup an indirect block.
         	int indirectBlock = inode.indirect;
+        	// new indirect block allocated, need to create one
         	if(indirectBlock == Inode.UNALLOCATED) {
         		indirectBlock = acquireFreeBlock();
+        		
         		if(SysLib.isError(indirectBlock)) {
         			return Kernel.ERROR;
         		}
+        		
+        		//set on the inode.
         		inode.indirect = (short)indirectBlock;
-        		// initialize the indirect block
+        		// initialize the indirect block all to UNALLOCATED
         		byte[] indirect = getBlockArray();
         		for(int offset=0; offset<indirect.length; offset+=2) {
         			SysLib.short2bytes((short)Inode.UNALLOCATED, indirect, offset);
         		}
+        		// write it back to the disk.
         		SysLib.rawwrite(inode.indirect, indirect);
         	}
+        	
+        	// Retrieve the indirect block
         	byte[] indirect = getBlockArray();
         	status = SysLib.rawread(indirectBlock, indirect);
-
+        	
+        	// Set the new indirect block and save back to the disk.
         	for(int offset=0; offset<indirect.length; offset+=2) {
         		short cur = SysLib.bytes2short(indirect, offset);
         		if(cur == Inode.UNALLOCATED) {
@@ -176,7 +184,8 @@ public class FileSystem {
         				return Kernel.ERROR;
         			}
         			SysLib.short2bytes((short)newBlock, indirect, offset);
-        			return Kernel.OK;
+        			SysLib.rawwrite(indirectBlock, indirect);
+        			return newBlock;
         		}
         	}
         }
@@ -275,6 +284,7 @@ public class FileSystem {
 	
 	public boolean format(int maxInodes) {
 		int status = superBlock.format(maxInodes);
+		sync();
 		return SysLib.isOk(status);
 	}
 	
@@ -332,17 +342,17 @@ public class FileSystem {
 		return Kernel.ERROR;
 	}
 
-	public Inode acquireFreeInode() {
-		int freeINumber = getFreeNodeNumber();
-		if(SysLib.isError(freeINumber)) {
-			Inode n = inodeCache[freeINumber];
-			synchronized(n) {
-				n.flag = 1;
-			}
-			return n;
-		}
-		return null;
-	}
+//	public Inode acquireFreeInode() {
+//		int freeINumber = getFreeNodeNumber();
+//		if(SysLib.isError(freeINumber)) {
+//			Inode n = inodeCache[freeINumber];
+//			synchronized(n) {
+//				n.flag = 1;
+//			}
+//			return n;
+//		}
+//		return null;
+//	}
 
     public static int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
         if(blockId < 0  ||
