@@ -19,27 +19,6 @@ public class TCB {
 			    " pid=" + pid + ")");
     }
 
-    public synchronized Thread getThread( ) {
-	return thread;
-    }
-
-    public synchronized int getTid( ) {
-	return tid;
-    }
-
-    public synchronized int getPid( ) {
-	return pid;
-    }
-
-    public synchronized boolean setTerminated( ) {
-	terminated = true;
-	return terminated;
-    }
-
-    public synchronized boolean getTerminated( ) {
-	return terminated;
-    }
-
     // added for the file system
     public synchronized int getFd( FileTableEntry entry ) {
 	if ( entry == null )
@@ -53,6 +32,30 @@ public class TCB {
 	return -1;
     }
 
+    // added for the file systme
+    public synchronized FileTableEntry getFtEnt( int fd ) {
+	if ( fd >= 3 && fd < 32 )
+	    return ftEnt[fd];
+	else
+	    return null;
+    }
+
+    public synchronized int getPid( ) {
+	return pid;
+    }
+
+    public synchronized boolean getTerminated( ) {
+	return terminated;
+    }
+
+    public synchronized Thread getThread( ) {
+	return thread;
+    }
+
+    public synchronized int getTid( ) {
+	return tid;
+    }
+
     // added for the file system
     public synchronized FileTableEntry returnFd( int fd ) {
 	if ( fd >= 3 && fd < 32 ) {
@@ -64,11 +67,8 @@ public class TCB {
 	    return null;
     }
 
-    // added for the file systme
-    public synchronized FileTableEntry getFtEnt( int fd ) {
-	if ( fd >= 3 && fd < 32 )
-	    return ftEnt[fd];
-	else
-	    return null;
+    public synchronized boolean setTerminated( ) {
+	terminated = true;
+	return terminated;
     }
 }

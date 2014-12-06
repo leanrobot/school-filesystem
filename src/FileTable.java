@@ -45,6 +45,15 @@ public class FileTable {
       }
 
       
+      //empties the file table of all entries
+      //returns whether or not the table is empty
+      public synchronized boolean fempty( ) {
+         for(FileTableEntry fte : table) {
+            ffree(fte);
+         }
+         return table.isEmpty( );  // return if table is empty
+      }
+
       // receive a file table entry reference
       // save the corresponding inode to the disk
       // free this file table entry.
@@ -55,14 +64,5 @@ public class FileTable {
             e.inode.toDisk(e.iNumber);
          }
          return table.remove(e);
-      }
-
-      //empties the file table of all entries
-      //returns whether or not the table is empty
-      public synchronized boolean fempty( ) {
-         for(FileTableEntry fte : table) {
-            ffree(fte);
-         }
-         return table.isEmpty( );  // return if table is empty
       }
    }

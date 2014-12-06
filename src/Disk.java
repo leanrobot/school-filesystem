@@ -41,6 +41,12 @@ public class Disk extends Thread {
         }
     }
 
+    private synchronized void finishCommand( ) {
+        command = IDLE;
+        readyBuffer = true;
+        SysLib.disk( ); // a disk interrupt
+    }
+
     public synchronized boolean read( int blockId, byte buffer[] ) {
 
         if ( blockId < 0 || blockId > diskSize ) {
@@ -58,21 +64,48 @@ public class Disk extends Thread {
             return false;
     }
 
-    public synchronized boolean write( int blockId, byte buffer[] ) {
-
-        if ( blockId < 0 || blockId > diskSize ) {
-            SysLib.cerr( "threadOS: a wrong blockId for write\n" );
-            return false;
+    public void run ( ) {
+        while ( true ) {
+            waitCommand( );
+            seek( );
+            // System.out.println( "Disk: command = " + command );
+            switch( command ) {
+                case READ:
+                    System.arraycopy( data, targetBlockId * blockSize, 
+                              buffer, 0, 
+                              blockSize );
+                    break;
+                case WRITE:
+                    System.arraycopy( buffer, 0, 
+                              data, targetBlockId * blockSize, 
+                              blockSize );
+                    break;
+                case SYNC:
+                    try {
+                        FileOutputStream ofstream = new FileOutputStream( "DISK" );
+                        ofstream.write( data );
+                        ofstream.close( );
+                    } catch ( FileNotFoundException e ) {
+                        SysLib.cerr( e.toString( ) );
+                    } catch ( IOException e ) {
+                        SysLib.cerr( e.toString( ) );
+                    }
+                    // SysLib.cerr( "threadOS: DISK synchronized\n" );
+                    break;
+            }
+            finishCommand( );
         }
+    }
 
-        if ( command == IDLE && readyBuffer == false ) {
-            this.buffer = buffer;
-            targetBlockId = blockId;
-            command = WRITE;
-            notify( );
-            return true;
-        } else
-            return false;
+    private void seek( ) {
+        int seekTime = transferTime + delayPerTrack 
+            * Math.abs( targetBlockId/trackSize - currentBlockId/trackSize );
+        try {
+            Thread.sleep( seekTime );
+        } catch( InterruptedException e ) {
+            SysLib.cerr( e.toString( ) + "\n" );
+        }
+        currentBlockId = targetBlockId;
     }
 
     public synchronized boolean sync( ) {
@@ -111,53 +144,20 @@ public class Disk extends Thread {
         }
     }
 
-    private void seek( ) {
-        int seekTime = transferTime + delayPerTrack 
-            * Math.abs( targetBlockId/trackSize - currentBlockId/trackSize );
-        try {
-            Thread.sleep( seekTime );
-        } catch( InterruptedException e ) {
-            SysLib.cerr( e.toString( ) + "\n" );
-        }
-        currentBlockId = targetBlockId;
-    }
+    public synchronized boolean write( int blockId, byte buffer[] ) {
 
-    private synchronized void finishCommand( ) {
-        command = IDLE;
-        readyBuffer = true;
-        SysLib.disk( ); // a disk interrupt
-    }
-
-    public void run ( ) {
-        while ( true ) {
-            waitCommand( );
-            seek( );
-            // System.out.println( "Disk: command = " + command );
-            switch( command ) {
-                case READ:
-                    System.arraycopy( data, targetBlockId * blockSize, 
-                              buffer, 0, 
-                              blockSize );
-                    break;
-                case WRITE:
-                    System.arraycopy( buffer, 0, 
-                              data, targetBlockId * blockSize, 
-                              blockSize );
-                    break;
-                case SYNC:
-                    try {
-                        FileOutputStream ofstream = new FileOutputStream( "DISK" );
-                        ofstream.write( data );
-                        ofstream.close( );
-                    } catch ( FileNotFoundException e ) {
-                        SysLib.cerr( e.toString( ) );
-                    } catch ( IOException e ) {
-                        SysLib.cerr( e.toString( ) );
-                    }
-                    // SysLib.cerr( "threadOS: DISK synchronized\n" );
-                    break;
-            }
-            finishCommand( );
+        if ( blockId < 0 || blockId > diskSize ) {
+            SysLib.cerr( "threadOS: a wrong blockId for write\n" );
+            return false;
         }
+
+        if ( command == IDLE && readyBuffer == false ) {
+            this.buffer = buffer;
+            targetBlockId = blockId;
+            command = WRITE;
+            notify( );
+            return true;
+        } else
+            return false;
     }
 }

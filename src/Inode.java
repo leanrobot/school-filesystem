@@ -72,14 +72,6 @@ public class Inode {
 
     }
 
-    public static int getInodeBlock(short iNumber) {
-        return ((iNumber * iNodeSize) / 512) + 1;
-    }
-
-    public static int getINodeOffset(short iNumber) {
-        return (iNumber * iNodeSize) % 512;
-    }
-
     public synchronized int toDisk( short iNumber ) {                  // save to disk as the i-th inode
         int blockId = getInodeBlock(iNumber);
         int blockOffset = getINodeOffset(iNumber);
@@ -116,6 +108,14 @@ public class Inode {
             throw e;
         }
         return Kernel.OK;
+    }
+
+    public static int getInodeBlock(short iNumber) {
+        return ((iNumber * iNodeSize) / 512) + 1;
+    }
+
+    public static int getINodeOffset(short iNumber) {
+        return (iNumber * iNodeSize) % 512;
     }
 
 

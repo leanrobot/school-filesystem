@@ -11,12 +11,6 @@ public class Loader extends Thread
    public Loader( String args[] ) {
    }
 
-   private static void help( ) {
-      SysLib.cout( "?:       print a help message\n" );
-      SysLib.cout( "q:       exit from threadOS\n" );
-      SysLib.cout( "l prog:  load prog\n" );
-   }
-
    public void run( ) {
       String cmdLine = "";
       char cmd = ' ';
@@ -51,5 +45,11 @@ public class Loader extends Thread
                break;
          }
       }
+   }
+
+   private static void help( ) {
+      SysLib.cout( "?:       print a help message\n" );
+      SysLib.cout( "q:       exit from threadOS\n" );
+      SysLib.cout( "l prog:  load prog\n" );
    }
 }

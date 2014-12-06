@@ -7,13 +7,16 @@ class Test5 extends Thread {
   final byte[] buf24 = new byte[24];
   int size;
 
-  public Test5( String args[] ) {
-    files = Integer.parseInt( args[0] );
-    // SysLib.cout( "files = " + files + "\n" );
-  }
+  //final byte[] buf8192 = new byte[8192];
+  final byte[] buf6656 = new byte[6656];
 
   public Test5() {
     files = DEFAULTFILES;
+    // SysLib.cout( "files = " + files + "\n" );
+  }
+
+  public Test5( String args[] ) {
+    files = Integer.parseInt( args[0] );
     // SysLib.cout( "files = " + files + "\n" );
   }
 
@@ -78,211 +81,6 @@ class Test5 extends Thread {
     }
     if ( freeList != 1 + files / 16 && freeList != 1 + files / 16 + 1 ) {
       SysLib.cout( "freeList = " + freeList + " (wrong)\n" );
-      return false;
-    }
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test2( ) {
-    //.............................................."
-    SysLib.cout( "2: fd = open( \"css430\", \"w+\" )...." );
-    fd = SysLib.open( "css430", "w+" );
-    if ( fd != 3 ) {
-      SysLib.cout( "fd = " + fd + " (wrong)\n" );
-      return false;
-    }
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test3( ) {
-    //.............................................."
-    SysLib.cout( "3: size = write( fd, buf[16] )...." );
-    for ( byte i = 0; i < 16; i++ )
-      buf16[i] = i;
-    size = SysLib.write( fd, buf16 );
-    if ( size != 16 ) {
-      SysLib.cout( "size = " + size + " (wrong)\n" );
-      return false;
-    }
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test4( ) {
-    //.............................................."
-    SysLib.cout( "4: close( fd )...................." );
-    SysLib.close( fd );
-
-    size = SysLib.write( fd, buf16 );
-    if ( size > 0 ) {
-      SysLib.cout( "writable even after closing the file\n" );
-      return false;
-    }
-
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test5( ) {
-    //.............................................."
-    SysLib.cout( "5: reopen and read from \"css430\".." );
-    fd = SysLib.open( "css430", "r" );
-
-    byte[] tmpBuf = new byte[16];
-    size = SysLib.read( fd, tmpBuf );
-    if ( size != 16 ) {
-      SysLib.cout( "size = " + size + " (wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-    for ( int i = 0; i < 16; i++ )
-      if ( tmpBuf[i] != buf16[i] ) {
-        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-    SysLib.close( fd );
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test6( ) {
-    //.............................................."
-    SysLib.cout( "6: append buf[32] to \"css430\"....." );
-    for ( byte i = 0; i < 32; i++ )
-      buf32[i] = ( byte )( i + ( byte )16 );
-
-    fd = SysLib.open( "css430", "a" );
-    SysLib.write( fd, buf32 );
-    SysLib.close( fd );
-
-    fd = SysLib.open( "css430", "r" );
-    byte[] tmpBuf = new byte[48];
-    size = SysLib.read( fd, tmpBuf );
-    if ( size != 48 ) {
-      SysLib.cout( "size = " + size + " (wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-    for ( int i = 0; i < 16; i++ )
-      if ( tmpBuf[i] != buf16[i] ) {
-        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-    for ( int i = 16; i < 48; i++ )
-      if ( tmpBuf[i] != buf32[i - 16] ) {
-        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-    SysLib.close( fd );
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test7( ) {
-    //.............................................."
-    SysLib.cout( "7: seek and read from \"css430\"...." );
-
-    fd = SysLib.open( "css430", "r" );
-
-    int position = SysLib.seek( fd, 10, 0 );
-    if ( position != 10 ) {
-      SysLib.cout( "seek(fd,10,0)=" + position + " (wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-    byte[] tmpBuf = new byte[2];
-    size = SysLib.read( fd, tmpBuf );
-    if ( tmpBuf[0] != ( byte )10 ) {
-      SysLib.cout( "seek(fd,10,0) contents " + tmpBuf[0] + "(wrong\n" );
-      SysLib.close( fd );
-      return false;
-    }
-
-    position = SysLib.seek( fd, 10, 0 );
-    position = SysLib.seek( fd, 10, 1 );
-    if ( position != 20 ) {
-      SysLib.cout( "seek(fd,10,1)=" + position + " (wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-    size = SysLib.read( fd, tmpBuf );
-    if ( tmpBuf[0] != ( byte )20 ) {
-      SysLib.cout( "seek(fd,10,1) contents " + tmpBuf[0] + "(wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-
-    position = SysLib.seek( fd, -2, 2 );
-    if ( position != 46 ) {
-      SysLib.cout( "seek(fd,-2,2)=" + position + "(wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-    size = SysLib.read( fd, tmpBuf );
-    if ( tmpBuf[0] != ( byte )46 ) {
-      SysLib.cout( "seek(fd,-2,2) contents " + tmpBuf[0] + "(wrong)\n" );
-      SysLib.close( fd );
-      return false;
-    }
-
-    SysLib.close( fd );
-    SysLib.cout( "successfully completed\n" );
-    return true;
-  }
-
-  private boolean test8( ) {
-    //.............................................."
-    SysLib.cout( "8: open \"css430\" with w+.........." );
-
-    for ( short i = 0; i < 24; i++ )
-      buf24[i] = ( byte )( 24 - i );
-
-    fd = SysLib.open( "css430", "w+" );
-    SysLib.seek( fd, 24, 0 );
-    SysLib.write( fd, buf24 );
-  
-    SysLib.seek( fd, 0, 0 );
-    byte[] tmpBuf = new byte[48];
-    SysLib.read( fd, tmpBuf );
-
-    for ( byte i = 0; i < 16; i++ )
-      if ( tmpBuf[i] != buf16[i] ) {
-        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-    for ( byte i = 16; i < 24; i++ )
-      if ( tmpBuf[i] != buf32[i-16] ) {
-        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-    for ( byte i = 24; i < 48; i++ )
-      if ( tmpBuf[i] != buf24[i-24] ) {
-        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
-        SysLib.close( fd );
-        return false;
-      }
-
-      SysLib.close( fd );
-      SysLib.cout( "successfully completed\n" );
-      return true;
-    }
-
-  //final byte[] buf8192 = new byte[8192];
-  final byte[] buf6656 = new byte[6656];
-
-  private boolean test9( ) {
-    //.............................................."
-    SysLib.cout( "9: fd = open( \"bothell\", \"w\" )...." );
-    fd = SysLib.open( "bothell", "w+" );
-    if ( fd != 3 ) {
-      SysLib.cout( "fd = " + fd + " (wrong)\n" );
       return false;
     }
     SysLib.cout( "successfully completed\n" );
@@ -546,6 +344,208 @@ class Test5 extends Thread {
         return false;
       }
     SysLib.close( fd );
+    return true;
+  }
+
+  private boolean test2( ) {
+    //.............................................."
+    SysLib.cout( "2: fd = open( \"css430\", \"w+\" )...." );
+    fd = SysLib.open( "css430", "w+" );
+    if ( fd != 3 ) {
+      SysLib.cout( "fd = " + fd + " (wrong)\n" );
+      return false;
+    }
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test3( ) {
+    //.............................................."
+    SysLib.cout( "3: size = write( fd, buf[16] )...." );
+    for ( byte i = 0; i < 16; i++ )
+      buf16[i] = i;
+    size = SysLib.write( fd, buf16 );
+    if ( size != 16 ) {
+      SysLib.cout( "size = " + size + " (wrong)\n" );
+      return false;
+    }
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test4( ) {
+    //.............................................."
+    SysLib.cout( "4: close( fd )...................." );
+    SysLib.close( fd );
+
+    size = SysLib.write( fd, buf16 );
+    if ( size > 0 ) {
+      SysLib.cout( "writable even after closing the file\n" );
+      return false;
+    }
+
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test5( ) {
+    //.............................................."
+    SysLib.cout( "5: reopen and read from \"css430\".." );
+    fd = SysLib.open( "css430", "r" );
+
+    byte[] tmpBuf = new byte[16];
+    size = SysLib.read( fd, tmpBuf );
+    if ( size != 16 ) {
+      SysLib.cout( "size = " + size + " (wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+    for ( int i = 0; i < 16; i++ )
+      if ( tmpBuf[i] != buf16[i] ) {
+        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+    SysLib.close( fd );
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test6( ) {
+    //.............................................."
+    SysLib.cout( "6: append buf[32] to \"css430\"....." );
+    for ( byte i = 0; i < 32; i++ )
+      buf32[i] = ( byte )( i + ( byte )16 );
+
+    fd = SysLib.open( "css430", "a" );
+    SysLib.write( fd, buf32 );
+    SysLib.close( fd );
+
+    fd = SysLib.open( "css430", "r" );
+    byte[] tmpBuf = new byte[48];
+    size = SysLib.read( fd, tmpBuf );
+    if ( size != 48 ) {
+      SysLib.cout( "size = " + size + " (wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+    for ( int i = 0; i < 16; i++ )
+      if ( tmpBuf[i] != buf16[i] ) {
+        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+    for ( int i = 16; i < 48; i++ )
+      if ( tmpBuf[i] != buf32[i - 16] ) {
+        SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+    SysLib.close( fd );
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test7( ) {
+    //.............................................."
+    SysLib.cout( "7: seek and read from \"css430\"...." );
+
+    fd = SysLib.open( "css430", "r" );
+
+    int position = SysLib.seek( fd, 10, 0 );
+    if ( position != 10 ) {
+      SysLib.cout( "seek(fd,10,0)=" + position + " (wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+    byte[] tmpBuf = new byte[2];
+    size = SysLib.read( fd, tmpBuf );
+    if ( tmpBuf[0] != ( byte )10 ) {
+      SysLib.cout( "seek(fd,10,0) contents " + tmpBuf[0] + "(wrong\n" );
+      SysLib.close( fd );
+      return false;
+    }
+
+    position = SysLib.seek( fd, 10, 0 );
+    position = SysLib.seek( fd, 10, 1 );
+    if ( position != 20 ) {
+      SysLib.cout( "seek(fd,10,1)=" + position + " (wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+    size = SysLib.read( fd, tmpBuf );
+    if ( tmpBuf[0] != ( byte )20 ) {
+      SysLib.cout( "seek(fd,10,1) contents " + tmpBuf[0] + "(wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+
+    position = SysLib.seek( fd, -2, 2 );
+    if ( position != 46 ) {
+      SysLib.cout( "seek(fd,-2,2)=" + position + "(wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+    size = SysLib.read( fd, tmpBuf );
+    if ( tmpBuf[0] != ( byte )46 ) {
+      SysLib.cout( "seek(fd,-2,2) contents " + tmpBuf[0] + "(wrong)\n" );
+      SysLib.close( fd );
+      return false;
+    }
+
+    SysLib.close( fd );
+    SysLib.cout( "successfully completed\n" );
+    return true;
+  }
+
+  private boolean test8( ) {
+    //.............................................."
+    SysLib.cout( "8: open \"css430\" with w+.........." );
+
+    for ( short i = 0; i < 24; i++ )
+      buf24[i] = ( byte )( 24 - i );
+
+    fd = SysLib.open( "css430", "w+" );
+    SysLib.seek( fd, 24, 0 );
+    SysLib.write( fd, buf24 );
+  
+    SysLib.seek( fd, 0, 0 );
+    byte[] tmpBuf = new byte[48];
+    SysLib.read( fd, tmpBuf );
+
+    for ( byte i = 0; i < 16; i++ )
+      if ( tmpBuf[i] != buf16[i] ) {
+        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+    for ( byte i = 16; i < 24; i++ )
+      if ( tmpBuf[i] != buf32[i-16] ) {
+        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+    for ( byte i = 24; i < 48; i++ )
+      if ( tmpBuf[i] != buf24[i-24] ) {
+        SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );
+        SysLib.close( fd );
+        return false;
+      }
+
+      SysLib.close( fd );
+      SysLib.cout( "successfully completed\n" );
+      return true;
+    }
+
+  private boolean test9( ) {
+    //.............................................."
+    SysLib.cout( "9: fd = open( \"bothell\", \"w\" )...." );
+    fd = SysLib.open( "bothell", "w+" );
+    if ( fd != 3 ) {
+      SysLib.cout( "fd = " + fd + " (wrong)\n" );
+      return false;
+    }
+    SysLib.cout( "successfully completed\n" );
     return true;
   }
 }

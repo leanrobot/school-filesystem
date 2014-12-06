@@ -33,7 +33,6 @@ public class SuperBlock {
 		}
 	}
 
-
 	int format(int numInodes) {
 		int status = 0;
 
@@ -49,6 +48,15 @@ public class SuperBlock {
 		}
 
 		return (status != 0) ? -1 : status;
+	}
+
+	public boolean returnBlock(int oldBlockNum){
+		// Enqueue a given block to the end of the freelist
+		byte[] buffer = new byte[Disk.blockSize];
+		SysLib.short2bytes((short)freeList, buffer, 0);
+		SysLib.rawwrite(oldBlockNum, buffer);
+		freeList = oldBlockNum;
+		return true;
 	}
 
 	int sync(){
@@ -71,15 +79,5 @@ public class SuperBlock {
 		}
 		
 		return retval;
-	}
-
-
-	public boolean returnBlock(int oldBlockNum){
-		// Enqueue a given block to the end of the freelist
-		byte[] buffer = new byte[Disk.blockSize];
-		SysLib.short2bytes((short)freeList, buffer, 0);
-		SysLib.rawwrite(oldBlockNum, buffer);
-		freeList = oldBlockNum;
-		return true;
 	}
 }
