@@ -1,3 +1,12 @@
+/******************************************************************************
+* SuperBlock.java
+* Programmed by: Brittany Bentley, James Hurd, Thomas Petit
+* Class: CSS430 - Operating Systems
+* Quarter: Autumn 2014
+* University of Washington, Bothell
+*  
+*
+******************************************************************************/
 
 public class SuperBlock {
 	private final int defaultInodeBlocks = 64;
@@ -28,17 +37,22 @@ public class SuperBlock {
 	int format(int numInodes) {
 		int status = 0;
 
+		// set-up member variables
 		totalBlocks = DEFAULT_TOTAL_BLOCKS;
 		totalInodes = numInodes;
 		freeList = Inode.getInodeBlock((short)totalInodes)+1;
 
+		// In case of failure, decrement status
 		for (short i= 1; i <= numInodes; ++i) {
 			Inode temp = new Inode();
 			status -= temp.toDisk(i);
 		}
 
+		// Sync to disk, decrement status on failure
 		status -= sync();
 
+		// if status was decremented at anytime, it will be less than 0, 
+		// return an error. 
 		return (status != 0) ? -1 : status;
 	}
 
@@ -64,8 +78,9 @@ public class SuperBlock {
 		return retval;
 	}
 
-    // James
+
 	public boolean returnBlock(int oldBlockNum){
+		// Enqueue a given block to the end of the freelist
 		byte[] buffer = new byte[Disk.blockSize];
 		SysLib.short2bytes((short)freeList, buffer, 0);
 		SysLib.rawwrite(oldBlockNum, buffer);
