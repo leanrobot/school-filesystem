@@ -1,3 +1,14 @@
+/******************************************************************************
+* FileSystem.java
+* Programmed by: Brittany Bentley, James Hurd, Thomas Petit
+* Class: CSS430 - Operating Systems
+* Quarter: Autumn 2014
+* University of Washington, Bothell
+*  
+*
+******************************************************************************/
+
+
 import java.util.Vector;
 
 
@@ -91,10 +102,6 @@ public class FileSystem {
     	return amountRead;
 	}
 
-	// TODO
-	//		Error handling of statuses return from raw read/write.
-	//		Allocation of indirect blocks.
-	//		check to see if the fte is open.
 	public int write(FileTableEntry fte, byte[] buffer) {
 		if(!fte.isOpen() || fte.mode.equals("r")) {
 			return Kernel.ERROR;
@@ -107,7 +114,6 @@ public class FileSystem {
     		int blockId = getSeekBlock(fte.inode, seekPtr);
     		// if the block is unallocated, allocate a new one for the inode.
             if(blockId == Inode.UNALLOCATED) {
-            	//TODO handling of allocation error, return # of bytes written instead?
                 blockId = allocateNewBlock(fte.inode);
                 if(SysLib.isError(blockId)) {
                 	return Kernel.ERROR;
@@ -138,7 +144,6 @@ public class FileSystem {
     	return amountWritten;
     }
 
-    // TODO add handling for indirect file handles.
     protected int allocateNewBlock(Inode inode) {
     	int status;
     	
@@ -194,7 +199,6 @@ public class FileSystem {
         return Kernel.ERROR;
     }
 
-    // TODO add handling for indirect file handles.
     protected static int getSeekBlock(Inode inode, int seekPtr) {
         // retrieve the direct list from the inode.
         int index = seekPtr/Disk.blockSize;
@@ -233,6 +237,7 @@ public class FileSystem {
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 		
+		//Deleted files cannot be reopened
 		if (newFileTableEntry.inode.flag == Inode.FLAG_DELETE){
 			return null;
 		}
@@ -262,14 +267,14 @@ public class FileSystem {
 		return newFileTableEntry;
 	}
 	
+	//closes the file indicated by the parameter FileTableEntry
+	//If close is called on a file flagged for deletion, 
+	//deallocates and deregister's file's inode.
 	public boolean close(FileTableEntry ftEnt){
-		//closes the file corresponding to fd, commits all file transactions on this file, and 
-		//unregisters fd from the user file descriptor table of the calling thread's TCB. The 
-		//return value is 0 in success, otherwise -1.
 		ftEnt.inode.count--;
 		if(ftEnt.inode.count<=0) {
 			ftEnt.seekPtr = 0;
-			if (ftEnt.inode.flag == Inode.FLAG_DELETE){
+			if (ftEnt.inode.flag == Inode.FLAG_DELETE){	
 				short iNumber = ftEnt.iNumber;
 				boolean deleted = directory.ifree(iNumber);
 				ftEnt.inode.flag = Inode.FLAG_UNUSED;
@@ -280,13 +285,13 @@ public class FileSystem {
 		return true;
 	}
 	
+	//returns the size in bytes of the file
 	public int fsize(FileTableEntry ftEnt){
-		//returns the size in bytes of the file indicated by fd.
 		return ftEnt.size();
 	}
 	
+	//Updates the seek pointer of the ftEnt
 	public int seek(FileTableEntry ftEnt, int offset, int whence){
-		//Updates the seek pointer of the ftEnt
 		return ftEnt.setSeekPtr(offset, whence);
 	}
 	
@@ -297,34 +302,24 @@ public class FileSystem {
 		return SysLib.isOk(status);
 	}
 	
+	//Deletes the file specified by fileName, unless it is currently open
+	//If file is currently open, sets a flag to prevent further opening but 
+	//file not destroyed. Delete upon last open closed is handled by close
 	public boolean delete(String fileName) {
-		//destroys the file specified by fileName. If the file is currently open, it is not 
-		//destroyed until the last open on it is closed, but new attempts to open it will fail.
 		
-		//count on the iNode is correct
 		boolean deleted = false;
 		short fileINum = directory.namei(fileName);
 		Inode deleteInode = getInode(fileINum);
 		if (deleteInode.count == 0){			//not open, delete
 			deleted = directory.ifree(fileINum);
 			deallocateInode(deleteInode);
-			deleteInode.flag = Inode.FLAG_DELETE;
+			deleteInode.flag = Inode.FLAG_DELETE;	//prevents further opening
 		}
 		else{
-			deleteInode.flag = Inode.FLAG_DELETE;		//prevent new attempts from opening but does not delete
-		}
-		
+			deleteInode.flag = Inode.FLAG_DELETE;	//no new opens, not deleted
+		}		
 		return deleted;
 	}
-
-	/*
-	aux data structure: (Inode cache) array with space for all Inode objects.
-	def getInode(iNodeNum):
-		if the inode is not in memory yet, load it from the disk into
-		the working inode cache.
-
-		after retrieval, return the Inode to the caller.
-	*/
 
 	public int acquireFreeBlock() {
 		if(superBlock.freeList < superBlock.totalBlocks)
@@ -351,18 +346,6 @@ public class FileSystem {
 		}
 		return Kernel.ERROR;
 	}
-
-//	public Inode acquireFreeInode() {
-//		int freeINumber = getFreeNodeNumber();
-//		if(SysLib.isError(freeINumber)) {
-//			Inode n = inodeCache[freeINumber];
-//			synchronized(n) {
-//				n.flag = 1;
-//			}
-//			return n;
-//		}
-//		return null;
-//	}
 
     public static int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
         if(blockId < 0  ||
@@ -421,20 +404,12 @@ public class FileSystem {
     public static byte[] getBlockArray() {
         return new byte[Disk.blockSize];
     }
+    
     // James
     private void deallocateInode(Inode toDeallocate) {
-    	//int seekptr = toDeallocate.length;
-    	//int block = getSeekBlock(toDeallocate, seekptr);
-    	
-//    	while (seekptr > 0) {
-//    		block = getSeekBlock(toDeallocate, seekptr);
-//    		superBlock.returnBlock(block);
-//    		seekptr -= Disk.blockSize;
-//    	}
     	
     	// check for indirect blocks, return them if they exists
     	if(toDeallocate.indirect != -1) {
-    		//superBlock.returnBlock(toDeallocate.indirect);
     		toDeallocate.indirect = -1;
     	}
     	
