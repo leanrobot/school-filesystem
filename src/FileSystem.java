@@ -22,7 +22,7 @@ public class FileSystem {
 		if(dirSize > 0) {
 		 	byte[] dirData = new byte[dirSize];
 		 	read(dirEnt, dirData);
-		 	directory.bytes2directory(dirdata);
+		 	directory.bytes2directory(dirData);
 		}
 		close (dirEnt);
 	}
