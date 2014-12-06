@@ -1,3 +1,14 @@
+/******************************************************************************
+* Inode.java
+* Programmed by: Brittany Bentley, James Hurd, Thomas Petit
+* Class: CSS430 - Operating Systems
+* Quarter: Autumn 2014
+* University of Washington, Bothell
+*  
+*
+******************************************************************************/
+
+
 public class Inode {
     private final static int iNodeSize = 32;       // fix to 32 bytes
     private final static int directSize = 11;      // # direct pointers
