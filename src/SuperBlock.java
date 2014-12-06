@@ -48,11 +48,6 @@ public class SuperBlock {
 			status -= temp.toDisk(i);
 		}
 
-		// Sync to disk, decrement status on failure
-		status -= sync();
-
-		// if status was decremented at anytime, it will be less than 0, 
-		// return an error. 
 		return (status != 0) ? -1 : status;
 	}
 

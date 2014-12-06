@@ -295,9 +295,10 @@ public class FileSystem {
 	public boolean format(int maxInodes) {
 		initInodeCache(maxInodes);
 		int status = superBlock.format(maxInodes);
-		sync();
 		this.directory = new Directory(maxInodes);
 		this.fileTable = new FileTable(this, this.directory);
+		superBlock.sync();
+		sync();
 		return SysLib.isOk(status);
 	}
 	
