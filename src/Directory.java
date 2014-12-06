@@ -1,3 +1,14 @@
+/******************************************************************************
+* Directory.java
+* Programmed by: Brittany Bentley, James Hurd, Thomas Petit
+* Class: CSS430 - Operating Systems
+* Quarter: Autumn 2014
+* University of Washington, Bothell
+*  
+*
+******************************************************************************/
+
+
 public class Directory {
       private static int maxChars = 30; // max characters of each file name
 
