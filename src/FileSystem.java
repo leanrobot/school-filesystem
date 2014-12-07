@@ -8,10 +8,6 @@
 *
 ******************************************************************************/
 
-
-import java.util.Vector;
-
-
 public class FileSystem {
 	private SuperBlock superBlock;
 	private Directory directory;
@@ -20,9 +16,9 @@ public class FileSystem {
 	// index 0 is not used, since this is the superblock;
 	private Inode[] inodeCache;
 
-	public FileSystem( int diskBlocks) {
+	public FileSystem(int diskBlocks) {
 		superBlock = new SuperBlock(diskBlocks);
-		initInodeCache(superBlock.totalInodes +1);
+		initInodes(superBlock.totalInodes);
 
 		directory = new Directory(superBlock.totalInodes);
 		fileTable = new FileTable(this, directory);
@@ -153,11 +149,23 @@ public class FileSystem {
 	}
 
     public boolean format(int maxInodes) {
-		initInodeCache(maxInodes);
-		int status = superBlock.format(maxInodes);
+    	int status;
+    	
+    	status = superBlock.format(maxInodes);
+    	
+    	// zero out all inode blocks.
+    	byte[] zeroed = new byte[Disk.blockSize];
+    	for(int i=0; i<zeroed.length; i++) zeroed[i] = 0;
+    	int LastBlockToZero = Inode.getInodeBlock((short)superBlock.totalInodes);
+    	for(int blockId=0; blockId<LastBlockToZero; blockId++) {
+    		SysLib.rawwrite(blockId, zeroed);
+    	}
+    	
+    	if(SysLib.isError(status)) return false;
+    	
+		initInodes(maxInodes);
 		this.directory = new Directory(maxInodes);
 		this.fileTable = new FileTable(this, this.directory);
-		superBlock.sync();
 		sync();
 		return SysLib.isOk(status);
 	}
@@ -178,19 +186,14 @@ public class FileSystem {
 	}
 	
 	public Inode getInode(short iNumber) {
-		// If Inode not in cache, load it in.
-		if(inodeCache[iNumber] == null) {
-			Inode inode = new Inode(iNumber);
-			inodeCache[iNumber] = inode;
-		}
-
 		return inodeCache[iNumber];
 	}
 	
-	public int initInodeCache(int totalInodes) {
+	public int initInodes(int totalInodes) {
 		inodeCache = new Inode[totalInodes];
-		for(short i=1; i<inodeCache.length; i++) {
-			inodeCache[i] = new Inode(i);
+		for(short i=0; i<inodeCache.length; i++) {
+			inodeCache[i] = new Inode();
+			inodeCache[i].toDisk((short)(i+1));
 		}
 		return Kernel.OK;
 	}
@@ -272,20 +275,16 @@ public class FileSystem {
 	}
 	
 	public void sync(){
-		SysLib.cout("Syncing Filesystem to disk\n");
 		superBlock.sync();
-		SysLib.cout("\tSync Superblock done.\n");
-		SysLib.cout("\tSync inodes: ");
 		for(short i=1; i<inodeCache.length; i++) {
 			Inode n = inodeCache[i];
 			synchronized(n) {
 				n.toDisk(i);
-				SysLib.cout(".");
 			}
 		}
 		FileTableEntry dirEnt = open("/", "w");
 		write(dirEnt, directory.directory2bytes());
-		SysLib.cout("\nFileSystem Synced!\n");
+		SysLib.cout("FileSystem Synced.\n");
 	}
 
 	public int write(FileTableEntry fte, byte[] buffer) {
