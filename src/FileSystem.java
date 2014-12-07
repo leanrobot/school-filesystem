@@ -23,6 +23,7 @@ public class FileSystem {
 		directory = new Directory(superBlock.totalInodes);
 		fileTable = new FileTable(this, directory);
 
+        // If a directory is available on the DISK, load it into memory.
 		FileTableEntry dirEnt = open("/", "r");
 		int dirSize = fsize(dirEnt);
 		if(dirSize > 0) {
@@ -33,26 +34,38 @@ public class FileSystem {
 		close (dirEnt);
 	}
 
+    // This method will return the next free block, and increment the 
+    // free list pointer.
 	public int acquireFreeBlock() {
 		if(superBlock.freeList < superBlock.totalBlocks)
 			return superBlock.freeList++;
 		return Kernel.ERROR;
 	}
 
+    // This method handles the allocation of all new blocks. 
+    // It loops through the direct array, then the indirect block, until an
+    // UNALLOCATED space is found. It then acquires a free block and adds it to 
+    // the file.
+    //
+    // If the indirect has not been allocated, it will create this also.
 	protected int allocateNewBlock(Inode inode) {
     	int status;
     	
         int newBlock = acquireFreeBlock();
+
+        // A new block is available, continue allocation.
         if(!SysLib.isError(newBlock)) {
-        	// allocating direct blocks
+            // ====== DIRECT ALLOCATION ========================================
         	for(int i=0; i<inode.direct.length; i++) {
         		if(inode.direct[i] == Inode.UNALLOCATED) {
         			inode.direct[i] = (short) newBlock;
         			return newBlock;
         		}
         	}
-        	// allocating indirect blocks
-        	// if this is the first indirect allocation, we need to setup an indirect block.
+
+            // ===== INDIRECT INDEX ALLOCATION =================================
+        	// if this is the first indirect allocation, we need to setup 
+            // an indirect block.
         	int indirectBlock = inode.indirect;
         	// new indirect block allocated, need to create one
         	if(indirectBlock == Inode.UNALLOCATED) {
@@ -73,15 +86,17 @@ public class FileSystem {
         		SysLib.rawwrite(inode.indirect, indirect);
         	}
         	
-        	// Retrieve the indirect block
+            // ===== INDIRECT BLOCK ALLOCATION =================================
         	byte[] indirect = getBlockArray();
         	status = SysLib.rawread(indirectBlock, indirect);
         	
-        	// Set the new indirect block and save back to the disk.
+        	// Find the first UNALLOCATED block in the indirect index, and 
+            // sets it to the newly allocated block. A save to the disk follows.
         	for(int offset=0; offset<indirect.length; offset+=2) {
         		short cur = SysLib.bytes2short(indirect, offset);
+
+                // Allocated this one.
         		if(cur == Inode.UNALLOCATED) {
-        			newBlock = acquireFreeBlock();
         			if(SysLib.isError(newBlock)) {
         				return Kernel.ERROR;
         			}
@@ -91,6 +106,8 @@ public class FileSystem {
         		}
         	}
         }
+
+        // No blocks are available for allocation, return an error.
         return Kernel.ERROR;
     }
 	
@@ -130,9 +147,9 @@ public class FileSystem {
        	}
     }
 
-    //Deletes the file specified by fileName, unless it is currently open
-	//If file is currently open, sets a flag to prevent further opening but 
-	//file not destroyed. Delete upon last open closed is handled by close
+    // Deletes the file specified by fileName, unless it is currently open
+	// If file is currently open, sets a flag to prevent further opening but 
+	// file not destroyed. Delete upon last open closed is handled by close
 	public boolean delete(String fileName) {	
 		boolean deleted = false;
 		short fileINum = directory.namei(fileName);
@@ -148,6 +165,7 @@ public class FileSystem {
 		return deleted;
 	}
 
+    // Formats the FileSystem on DISK, as well as the superblock.
     public boolean format(int maxInodes) {
     	int status;
     	
@@ -156,6 +174,7 @@ public class FileSystem {
     	// zero out all inode blocks.
     	byte[] zeroed = new byte[Disk.blockSize];
     	for(int i=0; i<zeroed.length; i++) zeroed[i] = 0;
+
     	int LastBlockToZero = Inode.getInodeBlock((short)superBlock.totalInodes);
     	for(int blockId=0; blockId<LastBlockToZero; blockId++) {
     		SysLib.rawwrite(blockId, zeroed);
@@ -163,32 +182,27 @@ public class FileSystem {
     	
     	if(SysLib.isError(status)) return false;
     	
+        // reinitialize members of FS and write to the DISK.
 		initInodes(maxInodes);
 		this.directory = new Directory(maxInodes);
 		this.fileTable = new FileTable(this, this.directory);
 		sync();
+
 		return SysLib.isOk(status);
 	}
     
-    //returns the size in bytes of the file
+    // returns the size in bytes of the file
 	public int fsize(FileTableEntry ftEnt){
 		return ftEnt.size();
 	}
-
-    public int getFreeNodeNumber() {
-		for(int i=1; i<inodeCache.length; i++) {
-			Inode n = inodeCache[i];
-			if(n.flag == 0) {
-				return i;
-			}
-		}
-		return Kernel.ERROR;
-	}
 	
+    // Retrieve an inode from the cache.
 	public Inode getInode(short iNumber) {
 		return inodeCache[iNumber];
 	}
 	
+    // Given the total inodes, all new inodes are initialized, stored in the
+    // cache, then written to the disk.
 	public int initInodes(int totalInodes) {
 		inodeCache = new Inode[totalInodes];
 		for(short i=0; i<inodeCache.length; i++) {
@@ -198,16 +212,16 @@ public class FileSystem {
 		return Kernel.OK;
 	}
 	
+
 	public FileTableEntry open(String fileName, String mode){
 		FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
-		
+
 		//Deleted files cannot be reopened
 		if (newFileTableEntry.inode.flag == Inode.FLAG_DELETE){
 			return null;
 		}
-		
+
 		short inode = directory.namei(fileName);
-		
 
 		// If Inode does not exist, cannot be opened in read mode, if not read mode, allocate
 		if (inode < 0 ) {
@@ -229,23 +243,32 @@ public class FileSystem {
 		return newFileTableEntry;
 	}
 	
-	//reads up to buffer.length bytes from the file indicated by fte, 
-	//starting at the position currently pointed to by the seek pointer.
+	// reads up to buffer.length bytes from the file indicated by fte, 
+	// starting at the position currently pointed to by the seek pointer.
 	public int read(FileTableEntry fte, byte[] buffer){
 		if(!fte.isOpen() || !(fte.mode.equals("r") || fte.mode.equals("w+"))) {
 			return Kernel.ERROR;
 		}
 		
     	byte[] blockData = getBlockArray();
+        // a local seekPtr is used so that in the event of an error, the 
+        // entrie's seekPtr is not moved.
     	int seekPtr = fte.seekPtr;
     	int status;
     	
-    	for(int bufferIndex=0; bufferIndex<buffer.length && seekPtr < fte.inode.length; /*bufferIndex++*/) {
-    		int blockId = getSeekBlock(fte.inode, seekPtr);
-    		// if the block is unallocated, return an error
+        // Outer loop controls the index inside the buffer, and whether or not
+        // to load a new disk block to continue reading. When the inner loop
+        // falls out of bounds on a disk block, then the outer loop will load
+        // the next so that the buffer can continue to be populated.
+    	for(int bufferIndex=0; 
+            bufferIndex<buffer.length && seekPtr < fte.inode.length;) {
+    		
+            int blockId = getSeekBlock(fte.inode, seekPtr);
+
             if(blockId == Inode.UNALLOCATED) {
                 return Kernel.ERROR;
             }
+
             // read the block to memory.
     		status = SysLib.rawread(blockId, blockData);
     		if (SysLib.isError(status)){
@@ -269,7 +292,7 @@ public class FileSystem {
     	return amountRead;
 	}
 	
-	//Updates the seek pointer of the ftEnt
+	// Updates the seek pointer of the ftEnt
 	public int seek(FileTableEntry ftEnt, int offset, int whence){
 		return ftEnt.setSeekPtr(offset, whence);
 	}
