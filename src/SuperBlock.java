@@ -13,7 +13,6 @@ public class SuperBlock {
 	public int totalBlocks;
 	public int totalInodes;
 	public int freeList;
-	private static final int DEFAULT_TOTAL_BLOCKS = 1000; 
 	
 	public SuperBlock (int diskSize) {
 		boolean loadSuccess = load(diskSize);
@@ -26,41 +25,6 @@ public class SuperBlock {
 		save();
 	}
 	
-	public boolean load(int diskSize) {
-		// read the superblock from the disk
-		byte[] superBlock = new byte[Disk.blockSize];
-		SysLib.rawread (0, superBlock);
-		totalBlocks = SysLib.bytes2int(superBlock, 0);
-		totalInodes = SysLib.bytes2int(superBlock, 4);
-		freeList = SysLib.bytes2int(superBlock, 8);
-		
-		if( totalBlocks == diskSize && totalInodes > 0 && freeList >= 2){
-			//disk contents are valid
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean save() {
-		// create array of data to be written
-		byte[] superBlockData = new byte[Disk.blockSize];
-
-		// write the data to the array
-		SysLib.int2bytes(totalBlocks, superBlockData, 0);
-		SysLib.int2bytes(totalInodes, superBlockData, 4);
-		SysLib.int2bytes(freeList, superBlockData, 8);
-
-		// write the array to block 0 of the disk
-		int retval = SysLib.rawwrite(0, superBlockData);
-		
-		// check for success and print messages accordingly
-		if (SysLib.isOk(retval)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	public int format(int numInodes) {
 		int status = 0;
 		
@@ -80,6 +44,21 @@ public class SuperBlock {
 
 		return (status != 0) ? -1 : status;
 	}
+	
+	public boolean load(int diskSize) {
+		// read the superblock from the disk
+		byte[] superBlock = new byte[Disk.blockSize];
+		SysLib.rawread (0, superBlock);
+		totalBlocks = SysLib.bytes2int(superBlock, 0);
+		totalInodes = SysLib.bytes2int(superBlock, 4);
+		freeList = SysLib.bytes2int(superBlock, 8);
+		
+		if( totalBlocks == diskSize && totalInodes > 0 && freeList >= 2){
+			//disk contents are valid
+			return true;
+		}
+		return false;
+	}
 
 	public boolean returnBlock(int oldBlockNum){
 		// Enqueue a given block to the end of the freelist
@@ -88,6 +67,26 @@ public class SuperBlock {
 		SysLib.rawwrite(oldBlockNum, buffer);
 		freeList = oldBlockNum;
 		return true;
+	}
+
+	public boolean save() {
+		// create array of data to be written
+		byte[] superBlockData = new byte[Disk.blockSize];
+
+		// write the data to the array
+		SysLib.int2bytes(totalBlocks, superBlockData, 0);
+		SysLib.int2bytes(totalInodes, superBlockData, 4);
+		SysLib.int2bytes(freeList, superBlockData, 8);
+
+		// write the array to block 0 of the disk
+		int retval = SysLib.rawwrite(0, superBlockData);
+		
+		// check for success and print messages accordingly
+		if (SysLib.isOk(retval)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	int sync(){
