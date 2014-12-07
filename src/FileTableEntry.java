@@ -43,13 +43,13 @@ public class FileTableEntry {  // Each table entry should have
     public int setSeekPtr(int offset, int whence){
         int whenceOffset;
         switch(whence) {
-            case SEEK_SET:			//start the pointer from the beginning
+            case SEEK_SET:          //start the pointer from the beginning
                 whenceOffset = 0;
                 break;
-            case SEEK_CUR:			//start the pointer from current location
+            case SEEK_CUR:          //start the pointer from current location
                 whenceOffset = this.seekPtr;
                 break;
-            case SEEK_END:			//start the pointer from the end
+            case SEEK_END:          //start the pointer from the end
                 whenceOffset = inode.length;
                 break;
             default:
@@ -65,12 +65,12 @@ public class FileTableEntry {  // Each table entry should have
         else {
             this.seekPtr = setPtrTo;
         }
-    	
-    	return this.seekPtr;
+        
+        return this.seekPtr;
     }
 
     //Returns the size of the file
     public int size(){
-    	return inode.length;
+        return inode.length;
     }
 }

@@ -94,7 +94,7 @@ public class Directory {
             
             //delete filename
             for(int i =0; i < maxChars; i++){
-            	fnames[iNumber][i] = '\0';
+               fnames[iNumber][i] = '\0';
             }
             
             return true;

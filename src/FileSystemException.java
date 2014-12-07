@@ -10,16 +10,16 @@
 
 // An exception class for sloppy developers.
 public class FileSystemException extends RuntimeException {
-	public FileSystemException() {
-		super("A FileSystemException occurred. you should've provided a "+
-					"error you sloppy developer.");
-	}
+    public FileSystemException() {
+        super("A FileSystemException occurred. you should've provided a "+
+                    "error you sloppy developer.");
+    }
 
-	public FileSystemException(String message) {
-		super(message);
-	}
+    public FileSystemException(String message) {
+        super(message);
+    }
 
-	public FileSystemException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public FileSystemException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

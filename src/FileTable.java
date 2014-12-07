@@ -20,7 +20,7 @@ public class FileTable {
       public FileTable(FileSystem fs, Directory directory ) { // constructor
          table = new Vector<FileTableEntry>();     // instantiate a file (structure) table
          dir = directory;           // receive a reference to the Director
-         this.fs = fs;				// from the file system
+         this.fs = fs;           // from the file system
       }                             
 
       
