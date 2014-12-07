@@ -297,6 +297,8 @@ public class FileSystem {
 		return ftEnt.setSeekPtr(offset, whence);
 	}
 	
+    // Synchronizes the FileSystem to the disk by writing all inodes, and the 
+    // directory.
 	public void sync(){
 		superBlock.sync();
 		for(short i=1; i<inodeCache.length; i++) {
@@ -310,15 +312,25 @@ public class FileSystem {
 		SysLib.cout("FileSystem Synced.\n");
 	}
 
+    // Writes the buffer to the file specified by the FileTableEntry.
+    // 
 	public int write(FileTableEntry fte, byte[] buffer) {
+        // disallow writing for specific conditions
 		if(!fte.isOpen() || fte.mode.equals("r")) {
 			return Kernel.ERROR;
 		}
+
     	byte[] blockData = getBlockArray();
+        // use local copy of seekPtr in order to maintain the original version
+        // in the event of an error.
     	int seekPtr = fte.seekPtr;
     	int status;
 
-    	for(int bufferIndex=0; bufferIndex<buffer.length; /*bufferIndex++*/) {
+        // Outer loop is used to retrieve the block that needs to be written to.
+        // The inner loop copies data from the buffer into the block.
+        // After the double bounds check on the inner loop is false, the
+        // disk block is written back to the DISK.
+    	for(int bufferIndex=0; bufferIndex<buffer.length;) {
     		int blockId = getSeekBlock(fte.inode, seekPtr);
     		// if the block is unallocated, allocate a new one for the inode.
             if(blockId == Inode.UNALLOCATED) {
@@ -343,7 +355,8 @@ public class FileSystem {
 
     	// calculate the amount written
     	int amountWritten = seekPtr - fte.seekPtr;
-    	// copy operation is complete, update inode and file table entry structures.
+    	// copy operation is complete, update inode and 
+        // file table entry structures.
     	if(seekPtr > fte.inode.length) {
     		fte.inode.length = seekPtr;
     	}
@@ -352,24 +365,9 @@ public class FileSystem {
     	return amountWritten;
     }
 
+    // Returns a standard sized byte[] for storing block data.
 	public static byte[] getBlockArray() {
         return new byte[Disk.blockSize];
-    }
-
-	public static short[] getIndirectArray(Inode inode) {
-    	int status;
-    	int indirectBlockId = inode.indirect;
-    	
-    	byte[] blockData = getBlockArray();
-    	short[] indirectBlocks = new short[blockData.length/2];
-    	
-    	status = SysLib.rawread(indirectBlockId, blockData);
-    	
-    	for(int offset=0, indirectOffset=0; offset<blockData.length; offset+=2, indirectOffset++){
-    		indirectBlocks[indirectOffset] = SysLib.bytes2short(blockData, offset);
-    	}
-    	
-    	return indirectBlocks;	
     }
 
     protected static int getSeekBlock(Inode inode, int seekPtr) {
@@ -377,13 +375,16 @@ public class FileSystem {
         int index = seekPtr/Disk.blockSize;
         if(index < inode.direct.length)
 	        return inode.direct[index];
-        // check if the indirect block is set.
+
         if(inode.indirect != Inode.UNALLOCATED) {
-        	short[] indirect = getIndirectArray(inode);
-        	index -= inode.direct.length;
-        	return indirect[index];
+            byte[] indirect = getBlockArray();
+            SysLib.rawread(inode.indirect, indirect);
+            index = (index-inode.direct.length) * 2;
+
+            short indirectBlock = SysLib.bytes2short(indirect, index);
+            return indirectBlock;
         }
-	    return Inode.UNALLOCATED;
+        return Inode.UNALLOCATED;
     }
 
 
