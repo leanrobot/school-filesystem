@@ -16,6 +16,7 @@ public class Directory {
       private int fsize[];        // each element stores a different file size.
       private char fnames[][];    // each element stores a different file name.
 
+      //constructor
       public Directory( int maxInumber ) { // directory constructor
          fsize = new int[maxInumber];     // maxInumber = max files
          for ( int i = 0; i < maxInumber; i++ ) 
@@ -72,9 +73,9 @@ public class Directory {
          return data;
       }
 
+      // filename is the one of a file to be created.
+      // allocates a new inode number for this filename
       public short ialloc( String filename ) {
-         // filename is the one of a file to be created.
-         // allocates a new inode number for this filename
          for (short i = 1; i < fsize.length; i++) {
             if(fsize[i] == 0) {
                fsize[i] = Math.min(filename.length(), maxChars);
@@ -86,9 +87,9 @@ public class Directory {
          return Kernel.ERROR;
       }
 
+      // deallocates this inumber (inode number)
+      // the corresponding file will be deleted.
       public boolean ifree( short iNumber ) {
-         // deallocates this inumber (inode number)
-         // the corresponding file will be deleted.
          if (fsize[iNumber] > 0){
             fsize[iNumber] = 0;
             
@@ -103,8 +104,8 @@ public class Directory {
          return false;
       }
 
+      // returns the inumber corresponding to this filename
       public short namei( String filename ) {
-         // returns the inumber corresponding to this filename
          for(short i = 0; i < fsize.length; i++) {
             String temp = new String(fnames[i], 0, fsize[i]);
             if (filename.compareTo(temp) == 0) {

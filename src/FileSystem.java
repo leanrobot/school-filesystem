@@ -16,6 +16,7 @@ public class FileSystem {
     // index 0 is not used, since this is the superblock;
     private Inode[] inodeCache;
 
+    //constructor
     public FileSystem(int diskBlocks) {
         superBlock = new SuperBlock(diskBlocks);
         initInodes(superBlock.totalInodes);
@@ -129,10 +130,12 @@ public class FileSystem {
         return true;
     }
     
+    //Deallocates the inode given as the parameter
+    //All member variables are reset as well as the
+    //direct and indirect pointers
     private void deallocateInode(Inode toDeallocate) {
         // check for indirect blocks, return them if they exists
         if(toDeallocate.indirect != Inode.UNALLOCATED) {
-            //superBlock.returnBlock(toDeallocate.indirect);
             toDeallocate.indirect = Inode.UNALLOCATED;
         }
         
@@ -213,6 +216,11 @@ public class FileSystem {
     }
     
 
+    //Opens a file. Takes two parameters, the name of the file to be opened
+    //(first parameter) and the mode in which to open it (second parameter)
+    //If the inode for the FileTableEntry does not exist and the mode parameter
+    //is not read, then an inode is allocated. If the mode is write, all the
+    //the blocks in the inode are deallocated.
     public FileTableEntry open(String fileName, String mode){
         FileTableEntry newFileTableEntry = fileTable.falloc(fileName, mode);
 
@@ -313,7 +321,8 @@ public class FileSystem {
     }
 
     // Writes the buffer to the file specified by the FileTableEntry.
-    // 
+    // Writes starting at the location of the seek pointer
+    // Returns the number of bytes that have been written
     public int write(FileTableEntry fte, byte[] buffer) {
         // disallow writing for specific conditions
         if(!fte.isOpen() || fte.mode.equals("r")) {
@@ -370,6 +379,7 @@ public class FileSystem {
         return new byte[Disk.blockSize];
     }
 
+    //Returns the number of the block where the seek pointer is located
     protected static int getSeekBlock(Inode inode, int seekPtr) {
         // retrieve the direct list from the inode.
         int index = seekPtr/Disk.blockSize;
@@ -388,10 +398,12 @@ public class FileSystem {
     }
 
 
+   //Returns how far the seek pointer is in the block 
    protected static int getSeekOffset(int seekPtr) {
     return seekPtr % Disk.blockSize;
 }
 
+   //Reads the data from the disk into a byte array
     public static int readRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
         if(blockId < 0  ||
             blockOffset+data.length > Disk.blockSize || blockOffset < 0) {
@@ -417,6 +429,7 @@ public class FileSystem {
         return Kernel.OK;
     }
     
+    //Writes the data into the disk
     public static int writeRawData(byte[] data, int blockId, int blockOffset) throws FileSystemException {
           // check the following
           //    blockId is valid, offset + data.length < blockLength

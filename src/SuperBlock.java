@@ -14,6 +14,7 @@ public class SuperBlock {
     public int totalInodes;
     public int freeList;
     
+    //constructor
     public SuperBlock (int diskSize) {
         boolean loadSuccess = load(diskSize);
         
@@ -25,6 +26,9 @@ public class SuperBlock {
         save();
     }
     
+    //Formats the superblock by writing all zeroes
+    //and resetting the variables. Then saves this information
+    //to the fisk
     public int format(int numInodes) {
         int status = 0;
         
@@ -45,8 +49,8 @@ public class SuperBlock {
         return (status != 0) ? -1 : status;
     }
     
+    // read the superblock from the disk
     public boolean load(int diskSize) {
-        // read the superblock from the disk
         byte[] superBlock = new byte[Disk.blockSize];
         SysLib.rawread (0, superBlock);
         totalBlocks = SysLib.bytes2int(superBlock, 0);
@@ -60,17 +64,8 @@ public class SuperBlock {
         return false;
     }
 
-    public boolean returnBlock(int oldBlockNum){
-        // Enqueue a given block to the end of the freelist
-        byte[] buffer = new byte[Disk.blockSize];
-        SysLib.short2bytes((short)freeList, buffer, 0);
-        SysLib.rawwrite(oldBlockNum, buffer);
-        freeList = oldBlockNum;
-        return true;
-    }
-
+    // create array of data to be written and saves to disk
     public boolean save() {
-        // create array of data to be written
         byte[] superBlockData = new byte[Disk.blockSize];
 
         // write the data to the array
@@ -89,6 +84,7 @@ public class SuperBlock {
         }
     }
 
+    //syncs the superblock to the disk
     int sync(){
         boolean saveSuccess = save();
         if(saveSuccess) {

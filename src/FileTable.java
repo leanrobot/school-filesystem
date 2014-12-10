@@ -17,6 +17,7 @@ public class FileTable {
       private Vector<FileTableEntry> table;         // the actual entity of this file table
       private Directory dir;        // the root directory
 
+      //constructor
       public FileTable(FileSystem fs, Directory directory ) { // constructor
          table = new Vector<FileTableEntry>();     // instantiate a file (structure) table
          dir = directory;           // receive a reference to the Director

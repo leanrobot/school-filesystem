@@ -25,6 +25,7 @@ public class Inode {
     public static final int UNALLOCATED = -1;
     //public static final int ...
 
+    //default constructor
     Inode( ) {                                     // a default constructor
         length = 0;
         count = 0;
@@ -34,6 +35,7 @@ public class Inode {
         indirect = UNALLOCATED;
     }
 
+    //constructor
     Inode( short iNumber ) {                       // retrieving inode from disk
         // design it by yourself.
         // makes a call to the filesystem to load the specific bytes for an
@@ -72,6 +74,7 @@ public class Inode {
 
     }
 
+    //Saves the given inode by inumber to the disk
     public synchronized int toDisk( short iNumber ) {                  // save to disk as the i-th inode
         int blockId = getInodeBlock(iNumber);
         int blockOffset = getINodeOffset(iNumber);
@@ -110,10 +113,12 @@ public class Inode {
         return Kernel.OK;
     }
 
+    //gets the block in which the given inumber is located
     public static int getInodeBlock(short iNumber) {
         return ((iNumber * iNodeSize) / 512) + 1;
     }
 
+    //returns the inode offset for the given inumber
     public static int getINodeOffset(short iNumber) {
         return (iNumber * iNodeSize) % 512;
     }
